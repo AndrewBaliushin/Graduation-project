@@ -6,9 +6,7 @@ package jhelp;
 
 import gui.JClient;
 
-import java.awt.*;
 import java.util.Properties;
-import javax.swing.*;
 
 /**
  * Client class provides users's interface of the application.

@@ -1,9 +1,17 @@
 package gui;
 
 import java.awt.*;
+
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 import java.util.*;
 import java.util.List;
+
+import static localization.Labels.*;
+import static settings.GUIconfig.*;
+import static settings.Config.*;
 
 @SuppressWarnings("serial")
 public class JClient extends JFrame{
@@ -21,19 +29,16 @@ public class JClient extends JFrame{
 	
 	private JLabel responseAreaLabel;
 	private JTextArea responseArea;
-	//End of MAIN tab
 	
-	
-	//Settings panel
+	//SETTINGS tab
+	private JButton chooseFileButton;
 	private JFileChooser fileChooser;
 	private JLabel ipAdressLabel;
 	private JLabel portLabel;
-	private JButton applySettingsButton;	
-	//End of settings panel
-	
+	private JButton applySettingsButton;
 	
 	public JClient() {
-		super("Title");
+		super(APP_TITLE);
 		
 		createGlobalLayout();
 		addTabs();
@@ -56,11 +61,11 @@ public class JClient extends JFrame{
 
 		JPanel mainPanel = createMainTabPanel();
 		JPanel helpPanel = createHelpTabPanel();
-//		JPanel settingsPanel = createSettingsTabPanel();
+		JPanel settingsPanel = createSettingsTabPanel();
 		
-		jtp.add("Main", mainPanel);
-		jtp.add("Help", helpPanel);
-//		jtp.add("Settings", settingsPanel);
+		jtp.add(MAIN_TAB_NAME, mainPanel);
+		jtp.add(HELP_TAB_NAME, helpPanel);
+		jtp.add(SETTINGS_TAB_NAME, settingsPanel);
 		
 		add(jtp, BorderLayout.NORTH);
 
@@ -68,85 +73,113 @@ public class JClient extends JFrame{
 	
 	private JPanel createMainTabPanel() {
 		JPanel mainPanel = new JPanel();
+		mainPanel.setLayout(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
 		
-		mainPanel.setLayout(new BorderLayout());
+		JPanel searchPanel = createSearchPanelOfMain();
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.anchor = GridBagConstraints.EAST;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		mainPanel.add(searchPanel, gbc);
 		
-		//UPPER FIELD SECTION
-		JPanel upperPanel = new JPanel();
-		upperPanel.setLayout(new BoxLayout(upperPanel, BoxLayout.X_AXIS));
-		upperPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		findButton = new JButton(FIND_BUTTON_NAME);
+		gbc.gridx = 1;
+		gbc.gridy = 0;
+		gbc.fill = GridBagConstraints.NONE;
+		gbc.anchor = GridBagConstraints.CENTER;
+		mainPanel.add(findButton, gbc);
 		
-		//TODO
-		inputFieldLabel = new JLabel("FIND IT");
+		responseAreaLabel = new JLabel(DEFINITION_AREA_LABEL);
+		gbc.gridx = 0;
+		gbc.gridy = 1;
+		gbc.anchor = GridBagConstraints.WEST;
+		mainPanel.add(responseAreaLabel, gbc);
+		
+		JPanel emptyPanel = new JPanel();
+		gbc.gridx = 1;
+		gbc.gridy = 1;
+		mainPanel.add(emptyPanel, gbc);
+		
+		JPanel definitionPanel = createDefinitionAreaOfMain();
+		gbc.gridx = 0;
+		gbc.gridy = 2;
+		mainPanel.add(definitionPanel, gbc);
+		
+		JPanel buttonPanel = createButtonPanelOfMain();
+		gbc.gridx = 1;
+		gbc.gridy = 2;
+		gbc.anchor = GridBagConstraints.NORTH;
+		mainPanel.add(buttonPanel, gbc);		
+		
+		return mainPanel;
+	}
+	
+	private JPanel createSearchPanelOfMain() {
+		JPanel searchPanel = new JPanel();
+		searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.X_AXIS));
+		searchPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 0));
+
+		inputFieldLabel = new JLabel(SEARCH_FIELD_LABEL);
 		inputField = new JTextField();
-		findButton = new JButton("FIND");
+
+		searchPanel.add(inputFieldLabel);
+		searchPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+		searchPanel.add(inputField);
+		searchPanel.add(Box.createRigidArea(new Dimension(10, 0)));
 		
-		upperPanel.add(inputFieldLabel);
-		upperPanel.add(Box.createRigidArea(new Dimension(10, 0)));
-		upperPanel.add(inputField);
-		upperPanel.add(Box.createRigidArea(new Dimension(10, 0)));
-		upperPanel.add(findButton);
-		upperPanel.add(Box.createRigidArea(new Dimension(10, 0)));
-		
-		
-		//LEFT SIDE
-		JPanel leftPanel = new JPanel();
-		leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
-		
-		responseAreaLabel = new JLabel("Response area");
+		return searchPanel;
+	}
+	
+	private JPanel createDefinitionAreaOfMain() {
+		JPanel defPanel = new JPanel();
+		defPanel.setLayout(new BoxLayout(defPanel, BoxLayout.Y_AXIS));
 		
 		responseArea = new JTextArea(20, 40);
 		responseArea.setBorder(BorderFactory.createLoweredBevelBorder());
 		
-		leftPanel.add(Box.createVerticalStrut(12));
+		defPanel.add(responseArea);
 		
-		leftPanel.add(responseAreaLabel);
-		leftPanel.add(responseArea);
-		
-		
-		//RIGHT SIDE
-		JPanel rightPanel = new JPanel();
-		rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
-		rightPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		
+		return defPanel;
+	}
+	
+	private JPanel createButtonPanelOfMain() {
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+		int brdr = BORDER_FOR_BUTTONS;
+		buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, brdr, 0, brdr));
+		buttonPanel.setAlignmentY(Component.TOP_ALIGNMENT);
+
 		List<JButton> buttons = new ArrayList<>();
-		
-		addButton = new JButton("add");
-		editButton = new JButton("edit");
-		nextButton = new JButton("next");
-		previousButton = new JButton("previous");
-		exitButton = new JButton("exit");
-		
+
+		addButton = new JButton(ADD_BUTTON_NAME);
+		editButton = new JButton(EDIT_BUTTON_NAME);
+		nextButton = new JButton(NEXT_BUTTON_NAME);
+		previousButton = new JButton(PREV_BUTTON_NAME);
+		exitButton = new JButton(EXIT_BUTTON_NAME);
+
 		buttons.add(addButton);
 		buttons.add(editButton);
 		buttons.add(nextButton);
 		buttons.add(previousButton);
 		buttons.add(exitButton);
-		
-		for(JButton button : buttons) {
-			rightPanel.add(button);
-			rightPanel.add(Box.createRigidArea(new Dimension(10, 10)));
+
+		int spc = SPACE_BETWEEN_BUTTONS;
+		for (JButton button : buttons) {
+			buttonPanel.add(button);
+			button.setAlignmentX(Component.CENTER_ALIGNMENT);
+			buttonPanel.add(Box.createRigidArea(new Dimension(spc, spc)));
 		}
 		
-		mainPanel.add(upperPanel, BorderLayout.NORTH);
-		mainPanel.add(leftPanel, BorderLayout.WEST);
-		mainPanel.add(rightPanel, BorderLayout.EAST);
-		
-		
-		return mainPanel;
+		return buttonPanel;
 	}
-	
-	
 	
 	private JPanel createHelpTabPanel() {
 		JPanel helpTabPanel = new JPanel();
+		helpTabPanel.setLayout(new BorderLayout());
 		
-		responseArea = new JTextArea(10, 10);
+		responseArea = new JTextArea();
 		responseArea.setEditable(false);
-		responseArea.setLineWrap(true);
-		
-		//TODO Add help text
-		responseArea.setText("Recieve your help");
 		
 		helpTabPanel.add(responseArea);
 		
@@ -155,13 +188,41 @@ public class JClient extends JFrame{
 	
 	private JPanel createSettingsTabPanel() {
 		JPanel settingPanel = new JPanel();
+		settingPanel.setLayout(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
 		
-		settingPanel.setLayout(new BoxLayout(settingPanel, BoxLayout.PAGE_AXIS));
+		//TODO delete stub
+		chooseFileButton = new JButton(CHOOSE_FILE_BUTTON_NAME);
+		applySettingsButton = new JButton(APPLY_CHANGES_BUTTON_NAME);
+		ipAdressLabel = new JLabel("stub");
+		portLabel = new JLabel("stub");
 		
-		JFileChooser fileChooser = new JFileChooser();
-		int ret = fileChooser.showDialog(null, "Открыть файл");
+		int spc = SPACE_BETWEEN_ELEMS_IN_SETTING;
+		gbc.insets = new Insets(spc, spc, spc, spc);
+		gbc.anchor = GridBagConstraints.CENTER;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
 		
-		settingPanel.add(fileChooser);
+		int row = 0;
+		gbc.gridy = row++;
+		settingPanel.add(chooseFileButton, gbc);
+		
+		gbc.gridy = row++;
+		settingPanel.add(applySettingsButton, gbc);
+		
+		gbc.gridy = row++;
+		settingPanel.add(ipAdressLabel, gbc);
+		
+		gbc.gridy = row++;
+		settingPanel.add(portLabel, gbc);
+		
+		
+//		JFileChooser fileChooser = new JFileChooser();
+//		FileNameExtensionFilter filter = new FileNameExtensionFilter(FILE_CHOOSER_FILTER_DESCRIPTON,
+//				CONFIG_FILE_EXTENSION);
+//		
+		//int ret = fileChooser.showDialog(null, "Открыть файл");
+		
+		
 		
 		return settingPanel;
 	}
