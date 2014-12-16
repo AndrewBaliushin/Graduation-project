@@ -118,15 +118,14 @@ public class JClient extends JFrame{
 	private JPanel createSearchPanelOfMain() {
 		JPanel searchPanel = new JPanel();
 		searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.X_AXIS));
-		searchPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 0));
+		int brdr = BORDER_SEARCH_PANEL;
+		searchPanel.setBorder(BorderFactory.createEmptyBorder(brdr, 0, brdr, 0));
 
 		inputFieldLabel = new JLabel(SEARCH_FIELD_LABEL);
 		inputField = new JTextField();
 
 		searchPanel.add(inputFieldLabel);
-		searchPanel.add(Box.createRigidArea(new Dimension(10, 0)));
 		searchPanel.add(inputField);
-		searchPanel.add(Box.createRigidArea(new Dimension(10, 0)));
 		
 		return searchPanel;
 	}
@@ -135,7 +134,8 @@ public class JClient extends JFrame{
 		JPanel defPanel = new JPanel();
 		defPanel.setLayout(new BoxLayout(defPanel, BoxLayout.Y_AXIS));
 		
-		responseArea = new JTextArea(20, 40);
+		int[] dim = DEFINITION_AREA_DIMENSION;
+		responseArea = new JTextArea(dim[0], dim[1]);
 		responseArea.setBorder(BorderFactory.createLoweredBevelBorder());
 		
 		defPanel.add(responseArea);
@@ -215,13 +215,11 @@ public class JClient extends JFrame{
 		gbc.gridy = row++;
 		settingPanel.add(portLabel, gbc);
 		
-		
 //		JFileChooser fileChooser = new JFileChooser();
 //		FileNameExtensionFilter filter = new FileNameExtensionFilter(FILE_CHOOSER_FILTER_DESCRIPTON,
 //				CONFIG_FILE_EXTENSION);
 //		
 		//int ret = fileChooser.showDialog(null, "Открыть файл");
-		
 		
 		
 		return settingPanel;
