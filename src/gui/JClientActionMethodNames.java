@@ -4,7 +4,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 /**
- * Names of the methods with actions for buttons and other elements.
+ * Names of the methods in {@link JClient} which contain actions for buttons and components.
  * Values must be consistent with methods of JClient or error will be shown in console.
  * @author Andrew Baliushin
  *
@@ -15,7 +15,9 @@ enum JClientActionMethodNames {
 	EDIT_BUTTON_ACTION("editButtonAction"), 
 	NEXT_BUTTON_ACTION("nextButtonAction"), 
 	PREV_BUTTON_ACTION("prevButtonAction"),
-	EXIT_BUTTON_ACTION("exitButtonAction");
+	EXIT_BUTTON_ACTION("exitButtonAction"),
+	CONNECT_BUTTON_ACTION("connectButtonAction"),
+	CHOOSE_FILE_BUTTON_ACTION("chooseFileAction");
 	
 	private String methodName;
 
@@ -28,10 +30,6 @@ enum JClientActionMethodNames {
 		return methodName;
 	}
 	
-	/**
-	 * 
-	 * @param methodName
-	 */
 	private void testMethodExistanceAndAccessibility(String methodName) {
 		try {
 			Method method = JClient.class.getDeclaredMethod(methodName);

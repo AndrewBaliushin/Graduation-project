@@ -1,14 +1,24 @@
 package gui;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
 
 import jhelp.Client;
+import jhelp.FileOpearations;
 
 import static localization.Labels.*;
 import static settings.GUIconfig.*;
@@ -27,6 +37,9 @@ public class JClient extends JFrame{
 	
 	JHelpActionListnerDispetcher actionListnerDispetcher;
 	
+	private int serverPort;
+	private String serverIP;
+	
 	//MAIN tab
 	private JButton findButton;
 	private JButton addButton;
@@ -43,23 +56,28 @@ public class JClient extends JFrame{
 	
 	//SETTINGS tab
 	private JButton chooseFileButton;
-//	private JFileChooser fileChooser;
 	private JLabel ipAdressLabel;
 	private JLabel portLabel;
-	private JButton applySettingsButton;
+	private JButton connectButton;
 	
 	public JClient(Client clientApp) {
 		super(APP_TITLE);
 		
 		this.clientApp = clientApp;
+		actionListnerDispetcher = new JHelpActionListnerDispetcher(this);
 		
-		actionListnerDispetcher = new JHelpActionListnerDispetcher(this);		
+		setDefaultIpAndPort();
 		
 		createGlobalLayout();
 		addTabs();
 		attachActionListners();
 		
 		fireStandartJFrameRoutines();
+	}
+	
+	private void setDefaultIpAndPort() {
+		serverIP = DEFAULT_IP;
+		serverPort = DEFAULT_PORT;
 	}
 		
 	private void fireStandartJFrameRoutines() {
@@ -217,12 +235,12 @@ public class JClient extends JFrame{
 		GridBagConstraints gbc = new GridBagConstraints();
 		
 		chooseFileButton = new JButton(CHOOSE_FILE_BUTTON_NAME);
-		applySettingsButton = new JButton(APPLY_CHANGES_BUTTON_NAME);
+		connectButton = new JButton(CONNECT_BUTTON_NAME);
 		ipAdressLabel = new JLabel();
 		portLabel = new JLabel();
 		
-		changeIpAdressLabel(IP_ADRESS_STUB);
-		changePortAdressLabel(PORT_STUB);
+		changeIpAdressLabel(serverIP);
+		changePortAdressLabel(serverPort);
 		
 		int spc = SPACE_BETWEEN_ELEMS_IN_SETTING;
 		gbc.insets = new Insets(spc, spc, spc, spc);
@@ -232,23 +250,15 @@ public class JClient extends JFrame{
 		int row = 0;
 		gbc.gridy = row++;
 		settingPanel.add(chooseFileButton, gbc);
-		
-		gbc.gridy = row++;
-		settingPanel.add(applySettingsButton, gbc);
-		
+				
 		gbc.gridy = row++;
 		settingPanel.add(ipAdressLabel, gbc);
 		
 		gbc.gridy = row++;
 		settingPanel.add(portLabel, gbc);
-		
-		//TODO make file chooser
-//		JFileChooser fileChooser = new JFileChooser();
-//		FileNameExtensionFilter filter = new FileNameExtensionFilter(FILE_CHOOSER_FILTER_DESCRIPTON,
-//				CONFIG_FILE_EXTENSION);
-//		
-		//int ret = fileChooser.showDialog(null, "Открыть файл");
-		
+
+		gbc.gridy = row++;
+		settingPanel.add(connectButton, gbc);
 		
 		return settingPanel;
 	}
@@ -257,8 +267,22 @@ public class JClient extends JFrame{
 		ipAdressLabel.setText(IP_LABEL_PREFIX + ip);
 	}
 	
-	private void changePortAdressLabel(String port) {
+	private void changePortAdressLabel(int port) {
 		portLabel.setText(PORT_LABEL_PREFIX + port);
+	}
+	
+	private void showAlertWindow(String msg) {
+		JOptionPane.showMessageDialog(null, 
+				msg);
+	}
+	
+	private boolean isDisconnectedAndShowAlertIfSo() {
+		if( clientApp.isConnected()) {
+			return false;
+		} else {
+			showAlertWindow(NO_CONNECTION_MSG);
+			return true;
+		}
 	}
 	
 	private void attachActionListners() {
@@ -271,6 +295,10 @@ public class JClient extends JFrame{
 		actionsForComponents.put(nextButton, NEXT_BUTTON_ACTION);
 		actionsForComponents.put(previousButton, PREV_BUTTON_ACTION);
 		actionsForComponents.put(exitButton, EXIT_BUTTON_ACTION);
+		
+		
+		actionsForComponents.put(chooseFileButton, CHOOSE_FILE_BUTTON_ACTION);
+		actionsForComponents.put(connectButton, CONNECT_BUTTON_ACTION);
 		
 		for (Entry<JComponent, JClientActionMethodNames> m : actionsForComponents.entrySet()) {
 			try {
@@ -286,8 +314,11 @@ public class JClient extends JFrame{
 	}
 	
 	void findButtonAction() {
-		JOptionPane.showMessageDialog(null, 
-				Thread.currentThread().getStackTrace()[1].getMethodName());
+		if(isDisconnectedAndShowAlertIfSo()) {
+			return;
+		}
+		
+		showAlertWindow(Thread.currentThread().getStackTrace()[1].getMethodName());
 	}
 	
 	void addButtonAction() {
@@ -313,5 +344,31 @@ public class JClient extends JFrame{
 	void exitButtonAction() {
 		clientApp.disconnect();
 		System.exit(0);
+	}
+	
+	void chooseFileAction() {
+		JFileChooser fc = new JFileChooser();
+		FileNameExtensionFilter fileExtensionFilter = new FileNameExtensionFilter(
+				FILE_CHOOSER_FILTER_DESCRIPTON, CONFIG_FILE_EXTENSION);
+		fc.setFileFilter(fileExtensionFilter);
+		fc.setAcceptAllFileFilterUsed(false);
+		fc.setDialogTitle(FILE_CHOOSER_DIALOG_TITLE);
+		
+		int returnValue = fc.showOpenDialog(null);
+		if (returnValue == JFileChooser.APPROVE_OPTION) {
+            File file = fc.getSelectedFile();
+            try {
+				InetSocketAddress socAdr = FileOpearations.getIpAndPortFromConfigFile(file);
+				changeIpAdressLabel(socAdr.getHostName());
+				changePortAdressLabel(socAdr.getPort());				
+			} catch (IOException e) {
+				showAlertWindow(CFG_FILE_ERROR);
+			}
+         }   
+	}
+	
+	void connectButtonAction() {
+		JOptionPane.showMessageDialog(null, 
+				Thread.currentThread().getStackTrace()[1].getMethodName());
 	}
 }

@@ -1,12 +1,11 @@
-/*
- * Client.java
- *
- */
 package jhelp;
 
-import gui.JClient;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 
-import java.util.Properties;
+import gui.JClient;
 
 /**
  * Client class provides users's interface of the application.
@@ -14,44 +13,42 @@ import java.util.Properties;
  * @version 1.0
  */
 public class Client implements JHelp {
+	
+	private int serverPort;
+	private String serverIP;
+	
+	private Socket socket;
+	private InputStream in;
+	private OutputStream out;	
 
-    /**
-     * Static constant for serialization
-     */
-    public static final long serialVersionUID = 1234;
-    /**
-     * Programm properties
-     */
-    private Properties prop;
     /**
      * Private Data object presents informational data.
      */
     private Data data;
 
     /**
+	 * Method for application start
+	 * @param args agrgument of command string
+	 */
+	static public void main(String[] args) {
+	
+	    Client client = new Client();
+	    
+	    if (client.connect(args) == JHelp.OK) {
+	        client.run();
+	        client.disconnect();
+	    }
+	}
+
+	/**
      * Constructor with parameters.
      * @param args Array of {@link String} objects. Each item of this array can
      * define any client's property.
      */
-    public Client(String[] args) {
-    	JClient gui = new JClient();
+    public Client() {
+	    JClient jClient = new JClient(this);
     }
     
-    
-    
-    /**
-     * Method for application start
-     * @param args agrgument of command string
-     */
-    static public void main(String[] args) {
-
-        Client client = new Client(args);
-        if (client.connect(args) == JHelp.OK) {
-            client.run();
-            client.disconnect();
-        }
-    }
-
     /**
      * Method define main job cycle
      */
@@ -76,6 +73,10 @@ public class Client implements JHelp {
         System.out.println("Client: connect");
         return JHelp.ERROR;
     }
+    
+    public boolean isConnected() {
+    	return (socket != null && socket.isConnected());
+    }
 
     /**
      * Method gets data from data source
@@ -95,4 +96,10 @@ public class Client implements JHelp {
         System.out.println("Client: disconnect");
         return JHelp.ERROR;
     }
+    
+    public String getHelpFileContent() {
+		//TODO Remove stub
+    	return "Everything\n is just \n fine.";
+	}
+    
 }

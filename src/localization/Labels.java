@@ -21,11 +21,12 @@ public class Labels {
 	public static final String IP_LABEL_PREFIX = "IP: ";
 	public static final String PORT_LABEL_PREFIX = "Port: ";
 	
-	public static final String IP_ADRESS_STUB = "Not set";
-	public static final String PORT_STUB = "Not set";
+	public static final String NO_CONNECTION_MSG = "No connection.\nUse settings to connect";
+	public static final String CFG_FILE_ERROR = "Can't read config from file";
 	
-	public static final String CHOOSE_FILE_BUTTON_NAME = "Choose file";
-	public static final String APPLY_CHANGES_BUTTON_NAME = "Apply config";
+	public static final String CHOOSE_FILE_BUTTON_NAME = "Choose config file";
+	public static final String FILE_CHOOSER_DIALOG_TITLE = "Open";
+	public static final String CONNECT_BUTTON_NAME = "Connect";
 	
 	public static final String FILE_CHOOSER_FILTER_DESCRIPTON = 
 			Config.CONFIG_FILE_EXTENSION + " files only";

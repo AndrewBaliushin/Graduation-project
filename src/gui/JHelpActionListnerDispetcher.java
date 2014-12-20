@@ -30,6 +30,7 @@ public class JHelpActionListnerDispetcher {
 		} catch (ReflectiveOperationException ex) {
 			System.err.println("Error occured in reflective oeration while invoking JClient method");
 			System.err.println(ex.getMessage());
+			ex.printStackTrace();
 		}	
 	}
 }
