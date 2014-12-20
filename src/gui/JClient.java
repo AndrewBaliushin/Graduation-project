@@ -203,6 +203,9 @@ public class JClient extends JFrame{
 		responseArea = new JTextArea();
 		responseArea.setEditable(false);
 		
+		String helpText = clientApp.getHelpFileContent();
+		responseArea.setText(helpText);
+		
 		helpTabPanel.add(responseArea);
 		
 		return helpTabPanel;

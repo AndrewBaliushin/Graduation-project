@@ -7,5 +7,4 @@ public class GUIconfig {
 	public static final int SPACE_BETWEEN_ELEMS_IN_SETTING = 12;
 	
 	public static final int[] DEFINITION_AREA_DIMENSION = new int[]{20, 50};
-
 }
