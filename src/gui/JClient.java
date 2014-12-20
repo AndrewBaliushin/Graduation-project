@@ -3,18 +3,29 @@ package gui;
 import java.awt.*;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.util.*;
 import java.util.List;
+import java.util.Map.Entry;
+
+import jhelp.Client;
 
 import static localization.Labels.*;
 import static settings.GUIconfig.*;
 import static settings.Config.*;
+import static gui.JClientActionMethodNames.*;
 
+/**
+ * GUI for {@link jhelp.Client}
+ * {@link jhelp.Client} must be already connected to server.
+ * @author Andrew Baliushin
+ */
 @SuppressWarnings("serial")
 public class JClient extends JFrame{
+	
+	Client clientApp;
+	
+	JHelpActionListnerDispetcher actionListnerDispetcher;
 	
 	//MAIN tab
 	private JButton findButton;
@@ -24,28 +35,33 @@ public class JClient extends JFrame{
 	private JButton previousButton;
 	private JButton exitButton;
 	
-	private JLabel inputFieldLabel;
-	private JTextField inputField; 
+	private JLabel searchFieldLabel;
+	private JTextField searchField; 
 	
 	private JLabel responseAreaLabel;
 	private JTextArea responseArea;
 	
 	//SETTINGS tab
 	private JButton chooseFileButton;
-	private JFileChooser fileChooser;
+//	private JFileChooser fileChooser;
 	private JLabel ipAdressLabel;
 	private JLabel portLabel;
 	private JButton applySettingsButton;
 	
-	public JClient() {
+	public JClient(Client clientApp) {
 		super(APP_TITLE);
+		
+		this.clientApp = clientApp;
+		
+		actionListnerDispetcher = new JHelpActionListnerDispetcher(this);		
 		
 		createGlobalLayout();
 		addTabs();
+		attachActionListners();
 		
 		fireStandartJFrameRoutines();
 	}
-	
+		
 	private void fireStandartJFrameRoutines() {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		pack();
@@ -68,7 +84,6 @@ public class JClient extends JFrame{
 		jtp.add(SETTINGS_TAB_NAME, settingsPanel);
 		
 		add(jtp, BorderLayout.NORTH);
-
 	}
 	
 	private JPanel createMainTabPanel() {
@@ -121,11 +136,11 @@ public class JClient extends JFrame{
 		int brdr = BORDER_SEARCH_PANEL;
 		searchPanel.setBorder(BorderFactory.createEmptyBorder(brdr, 0, brdr, 0));
 
-		inputFieldLabel = new JLabel(SEARCH_FIELD_LABEL);
-		inputField = new JTextField();
+		searchFieldLabel = new JLabel(SEARCH_FIELD_LABEL);
+		searchField = new JTextField();
 
-		searchPanel.add(inputFieldLabel);
-		searchPanel.add(inputField);
+		searchPanel.add(searchFieldLabel);
+		searchPanel.add(searchField);
 		
 		return searchPanel;
 	}
@@ -163,6 +178,8 @@ public class JClient extends JFrame{
 		buttons.add(nextButton);
 		buttons.add(previousButton);
 		buttons.add(exitButton);
+		
+		disableNextPrevButtons();
 
 		int spc = SPACE_BETWEEN_BUTTONS;
 		for (JButton button : buttons) {
@@ -172,6 +189,11 @@ public class JClient extends JFrame{
 		}
 		
 		return buttonPanel;
+	}
+	
+	private void disableNextPrevButtons() {
+		nextButton.setEnabled(false);
+		previousButton.setEnabled(false);
 	}
 	
 	private JPanel createHelpTabPanel() {
@@ -191,11 +213,13 @@ public class JClient extends JFrame{
 		settingPanel.setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
 		
-		//TODO delete stub
 		chooseFileButton = new JButton(CHOOSE_FILE_BUTTON_NAME);
 		applySettingsButton = new JButton(APPLY_CHANGES_BUTTON_NAME);
-		ipAdressLabel = new JLabel("stub");
-		portLabel = new JLabel("stub");
+		ipAdressLabel = new JLabel();
+		portLabel = new JLabel();
+		
+		changeIpAdressLabel(IP_ADRESS_STUB);
+		changePortAdressLabel(PORT_STUB);
 		
 		int spc = SPACE_BETWEEN_ELEMS_IN_SETTING;
 		gbc.insets = new Insets(spc, spc, spc, spc);
@@ -215,6 +239,7 @@ public class JClient extends JFrame{
 		gbc.gridy = row++;
 		settingPanel.add(portLabel, gbc);
 		
+		//TODO make file chooser
 //		JFileChooser fileChooser = new JFileChooser();
 //		FileNameExtensionFilter filter = new FileNameExtensionFilter(FILE_CHOOSER_FILTER_DESCRIPTON,
 //				CONFIG_FILE_EXTENSION);
@@ -223,5 +248,67 @@ public class JClient extends JFrame{
 		
 		
 		return settingPanel;
+	}
+	
+	private void changeIpAdressLabel(String ip) {
+		ipAdressLabel.setText(IP_LABEL_PREFIX + ip);
+	}
+	
+	private void changePortAdressLabel(String port) {
+		portLabel.setText(PORT_LABEL_PREFIX + port);
+	}
+	
+	private void attachActionListners() {
+		Map<JComponent, JClientActionMethodNames> actionsForComponents =
+				new HashMap<JComponent, JClientActionMethodNames>();
+		
+		actionsForComponents.put(findButton, FIND_BUTTON_ACTION);
+		actionsForComponents.put(addButton, ADD_BUTON_ACTION);
+		actionsForComponents.put(editButton, EDIT_BUTTON_ACTION);
+		actionsForComponents.put(nextButton, NEXT_BUTTON_ACTION);
+		actionsForComponents.put(previousButton, PREV_BUTTON_ACTION);
+		actionsForComponents.put(exitButton, EXIT_BUTTON_ACTION);
+		
+		for (Entry<JComponent, JClientActionMethodNames> m : actionsForComponents.entrySet()) {
+			try {
+				((JButton) m.getKey())
+						.addActionListener(actionListnerDispetcher
+								.createAListnerWithAttachment(m.getValue()));
+			} catch (ClassCastException ex) {
+				System.err.println("Exception in " + this.getClass().getName());
+				System.err.println("Can't cast to JButton (method to attach: "
+						+ m.getValue().getName());
+			}
+		}
+	}
+	
+	void findButtonAction() {
+		JOptionPane.showMessageDialog(null, 
+				Thread.currentThread().getStackTrace()[1].getMethodName());
+	}
+	
+	void addButtonAction() {
+		JOptionPane.showMessageDialog(null, 
+				Thread.currentThread().getStackTrace()[1].getMethodName());
+	}
+	
+	void editButtonAction() {
+		JOptionPane.showMessageDialog(null, 
+				Thread.currentThread().getStackTrace()[1].getMethodName());
+	}
+	
+	void nextButtonAction() {
+		JOptionPane.showMessageDialog(null, 
+				Thread.currentThread().getStackTrace()[1].getMethodName());
+	}
+	
+	void prevButtonAction() {
+		JOptionPane.showMessageDialog(null, 
+				Thread.currentThread().getStackTrace()[1].getMethodName());
+	}
+	
+	void exitButtonAction() {
+		clientApp.disconnect();
+		System.exit(0);
 	}
 }

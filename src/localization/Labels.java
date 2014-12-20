@@ -1,5 +1,7 @@
 package localization;
 
+import settings.Config;
+
 public class Labels {
 	public static final String MAIN_TAB_NAME = "Main";
 	public static final String SETTINGS_TAB_NAME = "Settings";
@@ -16,10 +18,16 @@ public class Labels {
 	public static final String PREV_BUTTON_NAME = "Previous";
 	public static final String EXIT_BUTTON_NAME = "Exit";
 	
+	public static final String IP_LABEL_PREFIX = "IP: ";
+	public static final String PORT_LABEL_PREFIX = "Port: ";
+	
+	public static final String IP_ADRESS_STUB = "Not set";
+	public static final String PORT_STUB = "Not set";
+	
 	public static final String CHOOSE_FILE_BUTTON_NAME = "Choose file";
 	public static final String APPLY_CHANGES_BUTTON_NAME = "Apply config";
 	
-	public static final String FILE_CHOOSER_FILTER_DESCRIPTON = "CFG files only";
-	
+	public static final String FILE_CHOOSER_FILTER_DESCRIPTON = 
+			Config.CONFIG_FILE_EXTENSION + " files only";
 
 }
