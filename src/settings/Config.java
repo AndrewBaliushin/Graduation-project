@@ -14,4 +14,6 @@ public class Config {
 	public static final String PORT_CONFIG_PARAM_NAME = "port";
 	
 	public static final char CFG_COMMENT_LINE_CHAR = '#';
+	
+	public static final String HELP_FILE_PATH = "data/help.txt";
 }

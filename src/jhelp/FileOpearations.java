@@ -22,6 +22,16 @@ public class FileOpearations {
 		return socketAdress;
 	}
 	
+	public static String getTextFileContent(String pathToFile) throws IOException {
+		String[] cont = getFileContent(new File(pathToFile));
+		StringBuilder sb = new StringBuilder();
+		for(String s : cont) {
+			sb.append(s + '\n');
+		}
+		return sb.toString();
+	}
+	
+
 	private static String[] getFileContent(File file) throws IOException{
 		BufferedReader br = new BufferedReader(new FileReader(file));
 		List<String> lines = new ArrayList<>();

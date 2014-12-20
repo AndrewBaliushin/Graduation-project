@@ -1,11 +1,13 @@
 package jhelp;
 
-import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
 import gui.JClient;
+
+import static settings.Config.*;
 
 /**
  * Client class provides users's interface of the application.
@@ -46,7 +48,8 @@ public class Client implements JHelp {
      * define any client's property.
      */
     public Client() {
-	    JClient jClient = new JClient(this);
+	    @SuppressWarnings("unused")
+		JClient jClient = new JClient(this);
     }
     
     /**
@@ -98,8 +101,12 @@ public class Client implements JHelp {
     }
     
     public String getHelpFileContent() {
-		//TODO Remove stub
-    	return "Everything\n is just \n fine.";
-	}
-    
+    	try {
+			return FileOpearations.getTextFileContent(HELP_FILE_PATH);
+		} catch (IOException e) {
+			System.err.println(Thread.currentThread().getStackTrace()[1]
+					.getMethodName() + " error " + e.getMessage());
+			return "Help file error";
+		}
+	}    
 }
