@@ -9,6 +9,8 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import static settings.Config.*;
+
 /**
  * This class presents server directly working with database.
  * The complete connection string should take the form of:<br>
@@ -54,7 +56,7 @@ public class ServerDb implements JHelp {
      * </ol>
      */
     public ServerDb() {
-        this(DEFAULT_DATABASE_PORT);
+        this(DEFAULT_DB_SERV_PORT);
         System.out.println("SERVERDb: default constructor");
     }
 

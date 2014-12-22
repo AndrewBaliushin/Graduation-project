@@ -1,13 +1,12 @@
 package jhelp;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 import gui.JClient;
 
 import static settings.Config.*;
+import static localization.LabelsAndMsges.*;
 
 /**
  * Client class provides users's interface of the application.
@@ -16,41 +15,25 @@ import static settings.Config.*;
  */
 public class Client implements JHelp {
 	
-	private int serverPort;
-	private String serverIP;
-	
 	private Socket socket;
-	private InputStream in;
-	private OutputStream out;	
+	private ObjectOutputStream oos;
+	private ObjectInputStream ois;
 
     /**
      * Private Data object presents informational data.
      */
-    private Data data;
+    private Data dataContainer;
+	
 
     /**
 	 * Method for application start
 	 * @param args agrgument of command string
 	 */
 	static public void main(String[] args) {
-	
-	    Client client = new Client();
-	    
-	    if (client.connect(args) == JHelp.OK) {
-	        client.run();
-	        client.disconnect();
-	    }
+		Client client = new Client();
+		@SuppressWarnings("unused")
+	    JClient jClient = new JClient(client);
 	}
-
-	/**
-     * Constructor with parameters.
-     * @param args Array of {@link String} objects. Each item of this array can
-     * define any client's property.
-     */
-    public Client() {
-	    @SuppressWarnings("unused")
-		JClient jClient = new JClient(this);
-    }
     
     /**
      * Method define main job cycle
@@ -60,25 +43,58 @@ public class Client implements JHelp {
     }
 
     /**
-     * Method set connection to default server with default parameters
-     * @return error code
+     * Set connection to default server with default parameters
+     * @return Status code from {@link JHelp}
      */
     public int connect() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return connect(DEFAULT_SERV_HOST, DEFAULT_SERV_PORT);
     }
 
     /**
-     * Method set connection to server with parameters defines by argument 
-     * <code>args</code>
-     * @return error code
+     * Connect to server using
+     * args[] where args[0] -- host name, args[1] -- port(String)
      */
     public int connect(String[] args) {
-        System.out.println("Client: connect");
-        return JHelp.ERROR;
+        if(args.length < 2) {
+        	return JHelp.ERROR;
+        } 
+        try {
+        	int port = Integer.parseInt(args[1]);
+        	return connect(args[0], port);
+        } catch (NumberFormatException e) {
+        	return JHelp.ERROR;
+        }
     }
     
+    /**
+     * Connect to server by host and port.
+     * @param host 
+     * @param port
+     * @return Status code from {@link JHelp}
+     */
+    public int connect(String host, int port) {
+    	if(isConnected()) {
+    		disconnect();
+    	}
+    	
+    	try {
+			socket = new Socket(host, port);
+			
+			oos = new ObjectOutputStream(socket.getOutputStream());
+			ois = new ObjectInputStream(socket.getInputStream());
+			
+			return JHelp.READY;
+    	} catch (Exception e) {
+    		System.err.println(SOCKET_CREATION_ERR_MSG);
+			return JHelp.ERROR;
+		}    	
+    }
+    
+    //FIXME isConnected!!
     public boolean isConnected() {
-    	return (socket != null && socket.isConnected());
+    	//don't use socket.isConnected() (true if once was connected)
+    	//or .isClosed() (true only if client closed connection
+    	return (socket != null);
     }
 
     /**
@@ -87,8 +103,26 @@ public class Client implements JHelp {
      * @return new object
      */
     public Data getData(Data data) {
-        System.out.println("Client: getData");
-        return null;
+        try {
+			return requestDataFromServ(data);			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return Data.getErrorData(CONNECTION_PROBLEM);			
+		}
+    }
+    
+    private Data requestDataFromServ(Data reqData) throws StreamCorruptedException {
+    	try {    
+    		oos.writeObject(reqData);		
+			Data answerData = (Data) ois.readObject();
+			return answerData;
+		} catch (StreamCorruptedException e){
+			throw e;
+		} catch (ClassNotFoundException | IOException | ClassCastException e) {
+			System.err.println(OBJECT_STREAM_ERROR);
+			e.printStackTrace();
+			return null;
+		}    	
     }
 
     /**
@@ -96,8 +130,23 @@ public class Client implements JHelp {
      * @return error code
      */
     public int disconnect() {
-        System.out.println("Client: disconnect");
-        return JHelp.ERROR;
+    	if(isConnected()) {
+			try {
+				oos.close();
+				ois.close();
+				socket.close();
+				System.out.println(DISCONNECTED_MSG);
+				return JHelp.OK;
+			} catch (IOException e) {
+				System.err.println(SOCKET_CLOSE_ERR_MSG);
+				return JHelp.ERROR;
+			} catch (NullPointerException e) {
+				System.err.println(SOCKET_NULL_POINTER_MSG);
+				return JHelp.OK;
+			}
+    	} else {
+    		return JHelp.OK;
+    	}
     }
     
     public String getHelpFileContent() {
@@ -109,4 +158,16 @@ public class Client implements JHelp {
 			return "Help file error";
 		}
 	}    
+    
+    public Data findRequest(Data data) {
+		return null;    	
+    }
+    
+    public Data addRequest() {
+    	return null;
+    }
+    
+    public Data editRequset() {
+    	return null;
+    }
 }

@@ -4,43 +4,53 @@
  */
 package jhelp;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+import static settings.Config.*;
+import static localization.LabelsAndMsges.*;
 
 /**
  * This class sets a network connection between end client's objects
  * of {@link jhelp.Client} type and single {@link jhelp.ServerDb} object.
- * @author <strong >Y.D.Zakovryashin, 2009</strong>
+ * @author Andrew Baliushin
  * @version 1.0
  * @see jhelp.Client
  * @see jhelp.ClientThread
  * @see jhelp.ServerDb
  */
 public class Server implements JHelp {
+	
+	private ServerSocket serverSocket;
 
-    /**
-     *
-     */
-    private ServerSocket serverSocket;
-    /**
-     *
-     */
-    private Socket clientSocket;
-    /**
-     *
-     */
+    private List<Thread> clientsThreads;
+ 
     private ObjectInputStream input;
-    /**
-     *
-     */
     private ObjectOutputStream output;
+    
+    private boolean listningForConnections;
+    
+    /**
+	 * 
+	 * @param args
+	 */
+	public static void main(String[] args) {
+	    Server server = new Server();
+	    if (server.connect(args) == JHelp.OK) {
+	        server.run();
+	        server.disconnect();
+	    }
+	}
 
-    /** Creates a new instance of Server */
+	/** Creates a new instance of Server */
     public Server() {
-        this(DEFAULT_SERVER_PORT, DEFAULT_DATABASE_PORT);
-        System.out.println("SERVER: Default Server Constructed");
+        this(DEFAULT_SERV_PORT, DEFAULT_DATABASE_PORT);
     }
 
     /**
@@ -49,27 +59,61 @@ public class Server implements JHelp {
      * @param dbPort
      */
     public Server(int port, int dbPort) {
-        System.out.println("SERVER: Server Constructed");
-    }
-
-    /**
-     * 
-     * @param args
-     */
-    public static void main(String[] args) {
-        System.out.println("SERVER: main");
-        Server server = new Server();
-        if (server.connect(args) == JHelp.OK) {
-            server.run();
-            server.disconnect();
-        }
+    	clientsThreads = new ArrayList<>();
+    	
+    	Thread kyeboardListner = new Thread(keyboardCommandListner());
+    	kyeboardListner.start();
+    	
+        try {
+			serverSocket = new ServerSocket(port);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     /**
      *
      */
-    private void run() {
-        System.out.println("SERVER: run");
+    protected void run() {
+    	listningForConnections = true;
+    	
+        while(listningForConnections) {
+        	try {
+        		Socket newSocket = serverSocket.accept();
+        		Thread newClient = new Thread(new ClientThread(this, newSocket));
+        		clientsThreads.add(newClient);
+        		newClient.start();
+        	} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+    }
+    
+    protected Runnable keyboardCommandListner() {
+    	return new Runnable() {
+            @Override
+            public void run() {
+                @SuppressWarnings("resource")
+				Scanner scan = new Scanner(System.in);
+                String input = "";
+                while (true) {                 
+                    input = scan.nextLine();
+                    Server.this.executeCommand(input);
+                }                
+            }
+    	};
+    }
+    
+    protected void executeCommand(String cmd) {
+    	switch (cmd) {
+		case EXIT_CMD:
+			exit();
+			break;
+		default:
+			System.out.println(COMMAND_NOT_FOUND);
+    	}
     }
 
     /**
@@ -105,9 +149,9 @@ public class Server implements JHelp {
      * application.
      * @return modified {@link Data} object
      */
-    public Data getData(Data data) {
-        System.out.println("SERVER:getData");
-        return null;
+    public synchronized Data getData(Data data) {
+    	Item[] items = {new Item("test1"), new Item("test2")};
+        return new Data(DISCONNECT, new Item("test"), items);
     }
 
     /**
@@ -119,5 +163,15 @@ public class Server implements JHelp {
     public int disconnect() {
         System.out.println("SERVER: disconnect");
         return OK;
+    }
+    
+    public void exit() {
+    	disconnect();
+    	System.exit(0);
+    }
+    
+    public void stopAndRemoveThread(Thread clientThread) {
+    	clientThread.interrupt();
+    	clientsThreads.remove(clientThread);
     }
 }

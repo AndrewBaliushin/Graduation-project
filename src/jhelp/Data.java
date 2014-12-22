@@ -23,6 +23,17 @@ public class Data implements Serializable {
     private int operation;
     private Item key;
     private Item[] values;
+    
+    public static final Data getErrorData(String msg) {
+    	Data data = new Data();
+    	data.setOperation(JHelp.ERROR);
+    	data.setKey(new Item(""));
+    	
+    	Item[] items = {new Item(msg)};
+    	data.setValues(items);
+    	
+    	return data;
+    }
 
     /**
      * Default constructor defines all class attributes with default values.

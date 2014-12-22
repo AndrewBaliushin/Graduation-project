@@ -1,14 +1,9 @@
 package gui;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -18,9 +13,12 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import jhelp.Client;
+import jhelp.Data;
 import jhelp.FileOpearations;
+import jhelp.Item;
+import jhelp.JHelp;
 
-import static localization.Labels.*;
+import static localization.LabelsAndMsges.*;
 import static settings.GUIconfig.*;
 import static settings.Config.*;
 import static gui.JClientActionMethodNames.*;
@@ -33,12 +31,14 @@ import static gui.JClientActionMethodNames.*;
 @SuppressWarnings("serial")
 public class JClient extends JFrame{
 	
-	Client clientApp;
+	private Client clientApp;
 	
-	JHelpActionListnerDispetcher actionListnerDispetcher;
+	private JHelpActionListnerDispetcher actionListnerDispetcher;
+	
+	private Data dataContainer;
 	
 	private int serverPort;
-	private String serverIP;
+	private String serverHost;
 	
 	//MAIN tab
 	private JButton findButton;
@@ -52,13 +52,18 @@ public class JClient extends JFrame{
 	private JTextField searchField; 
 	
 	private JLabel responseAreaLabel;
-	private JTextArea responseArea;
+	private JTextArea definitionArea;
+	
+	private JTextArea helpTextArea;
 	
 	//SETTINGS tab
 	private JButton chooseFileButton;
-	private JLabel ipAdressLabel;
+	private JLabel hostLabel;
 	private JLabel portLabel;
 	private JButton connectButton;
+	
+	private String[] definitionContent;
+	private int definitionCurrentIndex;
 	
 	public JClient(Client clientApp) {
 		super(APP_TITLE);
@@ -66,18 +71,18 @@ public class JClient extends JFrame{
 		this.clientApp = clientApp;
 		actionListnerDispetcher = new JHelpActionListnerDispetcher(this);
 		
-		setDefaultIpAndPort();
-		
 		createGlobalLayout();
 		addTabs();
 		attachActionListners();
 		
+		setPortHostAndTheirLabelsToDefault();
+		
 		fireStandartJFrameRoutines();
 	}
 	
-	private void setDefaultIpAndPort() {
-		serverIP = DEFAULT_IP;
-		serverPort = DEFAULT_PORT;
+	private void setPortHostAndTheirLabelsToDefault() {
+		changeHostHostAndLabel(DEFAULT_SERV_HOST);
+		changePortAndLabel(DEFAULT_SERV_PORT);
 	}
 		
 	private void fireStandartJFrameRoutines() {
@@ -168,10 +173,10 @@ public class JClient extends JFrame{
 		defPanel.setLayout(new BoxLayout(defPanel, BoxLayout.Y_AXIS));
 		
 		int[] dim = DEFINITION_AREA_DIMENSION;
-		responseArea = new JTextArea(dim[0], dim[1]);
-		responseArea.setBorder(BorderFactory.createLoweredBevelBorder());
+		definitionArea = new JTextArea(dim[0], dim[1]);
+		definitionArea.setBorder(BorderFactory.createLoweredBevelBorder());
 		
-		defPanel.add(responseArea);
+		defPanel.add(definitionArea);
 		
 		return defPanel;
 	}
@@ -218,13 +223,13 @@ public class JClient extends JFrame{
 		JPanel helpTabPanel = new JPanel();
 		helpTabPanel.setLayout(new BorderLayout());
 		
-		responseArea = new JTextArea();
-		responseArea.setEditable(false);
+		helpTextArea = new JTextArea();
+		helpTextArea.setEditable(false);
 		
 		String helpText = clientApp.getHelpFileContent();
-		responseArea.setText(helpText);
+		helpTextArea.setText(helpText);
 		
-		helpTabPanel.add(responseArea);
+		helpTabPanel.add(helpTextArea);
 		
 		return helpTabPanel;
 	}
@@ -236,11 +241,8 @@ public class JClient extends JFrame{
 		
 		chooseFileButton = new JButton(CHOOSE_FILE_BUTTON_NAME);
 		connectButton = new JButton(CONNECT_BUTTON_NAME);
-		ipAdressLabel = new JLabel();
+		hostLabel = new JLabel();
 		portLabel = new JLabel();
-		
-		changeIpAdressLabel(serverIP);
-		changePortAdressLabel(serverPort);
 		
 		int spc = SPACE_BETWEEN_ELEMS_IN_SETTING;
 		gbc.insets = new Insets(spc, spc, spc, spc);
@@ -252,7 +254,7 @@ public class JClient extends JFrame{
 		settingPanel.add(chooseFileButton, gbc);
 				
 		gbc.gridy = row++;
-		settingPanel.add(ipAdressLabel, gbc);
+		settingPanel.add(hostLabel, gbc);
 		
 		gbc.gridy = row++;
 		settingPanel.add(portLabel, gbc);
@@ -263,11 +265,13 @@ public class JClient extends JFrame{
 		return settingPanel;
 	}
 	
-	private void changeIpAdressLabel(String ip) {
-		ipAdressLabel.setText(IP_LABEL_PREFIX + ip);
+	private void changeHostHostAndLabel(String host) {
+		this.serverHost = host;
+		hostLabel.setText(HOST_LABEL_PREFIX + host);
 	}
 	
-	private void changePortAdressLabel(int port) {
+	private void changePortAndLabel(int port) {
+		this.serverPort = port;
 		portLabel.setText(PORT_LABEL_PREFIX + port);
 	}
 	
@@ -282,6 +286,48 @@ public class JClient extends JFrame{
 		} else {
 			showAlertWindow(NO_CONNECTION_MSG);
 			return true;
+		}
+	}
+	
+	private void refreshDataInGUI(Data newData) {
+		Item[] definitions = newData.getValues();
+		int defLength = definitions.length;
+		
+		if(defLength == 0) {
+			return;
+		}
+		
+		definitionContent = new String[defLength];
+		for (int i = 0; i < definitions.length; i++) {
+			definitionContent[i] = definitions[i].getItem();
+		}
+		
+		definitionCurrentIndex = 0;
+		setDefinition(definitionContent[definitionCurrentIndex]);
+		refreshPrevNextButtonStatus();
+	}
+	
+	private void setDefinition(String cont) {
+		definitionArea.setText(cont);
+		
+	}
+	
+	private void refreshPrevNextButtonStatus() {
+		if(definitionContent == null || definitionContent.length < 2) {
+			previousButton.setEnabled(false);
+			nextButton.setEnabled(false);
+		}
+		
+		int defLen = definitionContent.length;
+		if(definitionCurrentIndex > 0) {
+			previousButton.setEnabled(true);
+		}  else {
+			previousButton.setEnabled(false);
+		}
+		if(definitionCurrentIndex < (defLen - 1)) {
+			nextButton.setEnabled(true);
+		} else {
+			nextButton.setEnabled(false);
 		}
 	}
 	
@@ -318,7 +364,16 @@ public class JClient extends JFrame{
 			return;
 		}
 		
-		showAlertWindow(Thread.currentThread().getStackTrace()[1].getMethodName());
+		dataContainer = new Data();
+		dataContainer.setOperation(JHelp.SELECT);
+		dataContainer.setKey(new Item(searchField.getText()));
+		
+		dataContainer = clientApp.getData(dataContainer);
+		if(dataContainer.getOperation() == JHelp.ERROR) {
+			showAlertWindow(dataContainer.getValue(0).getItem());
+		} else {
+			refreshDataInGUI(dataContainer);
+		}						
 	}
 	
 	void addButtonAction() {
@@ -332,13 +387,15 @@ public class JClient extends JFrame{
 	}
 	
 	void nextButtonAction() {
-		JOptionPane.showMessageDialog(null, 
-				Thread.currentThread().getStackTrace()[1].getMethodName());
+		String def = definitionContent[++definitionCurrentIndex];
+		setDefinition(def);
+		refreshPrevNextButtonStatus();
 	}
 	
 	void prevButtonAction() {
-		JOptionPane.showMessageDialog(null, 
-				Thread.currentThread().getStackTrace()[1].getMethodName());
+		String def = definitionContent[--definitionCurrentIndex];
+		setDefinition(def);
+		refreshPrevNextButtonStatus();
 	}
 	
 	void exitButtonAction() {
@@ -359,8 +416,8 @@ public class JClient extends JFrame{
             File file = fc.getSelectedFile();
             try {
 				InetSocketAddress socAdr = FileOpearations.getIpAndPortFromConfigFile(file);
-				changeIpAdressLabel(socAdr.getHostName());
-				changePortAdressLabel(socAdr.getPort());				
+				changeHostHostAndLabel(socAdr.getHostName());
+				changePortAndLabel(socAdr.getPort());				
 			} catch (IOException e) {
 				showAlertWindow(CFG_FILE_ERROR);
 			}
@@ -368,7 +425,11 @@ public class JClient extends JFrame{
 	}
 	
 	void connectButtonAction() {
-		JOptionPane.showMessageDialog(null, 
-				Thread.currentThread().getStackTrace()[1].getMethodName());
+		int status = clientApp.connect(serverHost, serverPort);
+		if(status == JHelp.READY) {
+			showAlertWindow(CONNECTED_MSG);
+		} else {
+			showAlertWindow(SOCKET_CREATION_ERR_MSG);
+		}
 	}
 }

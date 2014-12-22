@@ -3,9 +3,10 @@
  */
 package jhelp;
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
+
+import static localization.LabelsAndMsges.*;
 
 /**
  * This class provides a network connection between end client of
@@ -42,16 +43,55 @@ public class ClientThread implements JHelp, Runnable {
      * with client application.
      */
     public ClientThread(Server server, Socket socket) {
-        System.out.println("MClient: constructor");
+        this.server = server;
+        this.clientSocket = socket;
+        
+		try {
+			input = new ObjectInputStream(clientSocket.getInputStream());
+			output = new ObjectOutputStream(clientSocket.getOutputStream());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     /**
      * The method defines main job cycle for the object.
      */
     public void run() {
-        System.out.println("MClient: run");
+        while( ! Thread.interrupted()) {
+			try {
+				sendDataToServerAndReturnAnswerToClient();
+			} catch (StreamCorruptedException e) {
+				System.err.println(CONNECTION_PROBLEM);
+				disconnect();				
+			} catch (EOFException e) {
+				System.out.println(DISCONNECTED_MSG);
+				disconnect();
+			}
+        }
     }
-
+    
+    /**
+     * Receive {@link Data} from {@link Client}, send to server, receive server answer 
+     * as {@link Data} and send it to {@link Client}
+     * @throws StreamCorruptedException - if connection down
+     * @throws EOFException - when client disconnect
+     */
+    private void sendDataToServerAndReturnAnswerToClient() throws StreamCorruptedException, EOFException {
+    	try {    		
+			Data requestData = (Data) input.readObject();
+			Data answerData = server.getData(requestData);
+			output.writeObject(answerData);			
+		} catch (StreamCorruptedException | EOFException e){
+			throw e;
+		} catch (ClassNotFoundException | IOException | ClassCastException e) {
+			System.err.println(OBJECT_STREAM_ERROR);
+			e.printStackTrace();
+			Thread.currentThread().interrupt();
+		}    	
+    }
+    
     /**
      * Opens input and output streams for data interchanging with
      * client application.  The method uses default parameters.
@@ -95,7 +135,16 @@ public class ClientThread implements JHelp, Runnable {
      * otherwise the method returns {@link JHelp#ERROR}.
      */
     public int disconnect() {
-        System.out.println("Client: disconnect");
+        Thread.currentThread().interrupt();
+        
+        try {
+			input.close();
+			output.close();
+	        clientSocket.close();
+		} catch (IOException e) {
+			System.err.println(SOCKET_CLOSE_ERR_MSG);
+		}
+        
         return JHelp.OK;
     }
 }
