@@ -20,5 +20,5 @@ System works with database where "term -- definition" data is stored. Example: v
 
 ![screenshot][screen2]
 
-[screen1]: https://github.com/AndrewBaliushin/Graduation-project/tree/master/screen1.png "Screenshot 1"
-[screen2]: https://github.com/AndrewBaliushin/Graduation-project/tree/master/screen2.png "Screenshot 2"
+[screen1]: https://github.com/AndrewBaliushin/Graduation-project/tree/master/screen1.jpg "Screenshot 1"
+[screen2]: https://github.com/AndrewBaliushin/Graduation-project/tree/master/screen2.jpg "Screenshot 2"
