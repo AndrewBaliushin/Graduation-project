@@ -16,9 +16,7 @@ System works with database where "term -- definition" data is stored. Example: v
 * Edit existing definitions for terms.
 * Connection config for Client in separate .cfg file.
 
-![screenshot][screen1]
+![screen1](screen1.jpg?raw=true "Screenshot 1")
+![screen2](screen2.jpg "Screenshot 2")
 
-![screenshot][screen2]
 
-[screen1]: https://github.com/AndrewBaliushin/Graduation-project/tree/master/screen1.jpg?raw=true "Screenshot 1"
-[screen2]: https://github.com/AndrewBaliushin/Graduation-project/tree/master/screen2.jpg?raw=true "Screenshot 2"
