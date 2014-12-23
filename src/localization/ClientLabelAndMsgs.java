@@ -33,6 +33,7 @@ public class ClientLabelAndMsgs {
 	public static final String SOCKET_CREATION_ERR_MSG = "Can't create connection";
 	
 	public static final String ADD_SUCCESS = "Term succesufly added";
+	public static final String EDIT_SUCCESS = "Difinition succesfuly updated";
 	
 	public static final String OBJECT_STREAM_ERROR = "Error during data transfer";
 	public static final String CONNECTION_PROBLEM = "There is connection problem";

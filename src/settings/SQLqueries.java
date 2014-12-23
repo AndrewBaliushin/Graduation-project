@@ -17,7 +17,11 @@ public class SQLqueries {
 			" FROM tblTerms" +
 			" WHERE term = ?";
 	
+	public static final String UPDATE_DEFINITION = "UPDATE tblDefinitions " +
+			" SET definition = ?" +
+			" WHERE id = ?";
 	
+
 	
 	
 }

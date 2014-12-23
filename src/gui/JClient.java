@@ -371,30 +371,40 @@ public class JClient extends JFrame{
 	}
 	
 	void addButtonAction() {
+		addOrUpdateRequest(JHelp.INSERT, ADD_SUCCESS);
+	}
+	
+	void editButtonAction() {
+		addOrUpdateRequest(JHelp.UPDATE, EDIT_SUCCESS);
+	}
+
+	/**
+	 * Send data {@link Data} with request to server 
+	 * @param type -- {@link JHelp#UPDATE} or {@link JHelp#INSERT}
+	 * @param successMsg -- Message, that will be shown to user
+	 */
+	private void addOrUpdateRequest(int type, String successMsg) {
 		if(isDisconnectedAndShowAlertIfSo()) {
 			return;
 		}
 		
 		String term = searchField.getText();
-		String def = definitionArea.getText();
+		String newDef = definitionArea.getText();
 		
-		data = new Data();
-		data.setOperation(JHelp.INSERT);
+		Item defItem = data.getValue(definitionCurrentIndex);
+		defItem.setItem(newDef);
+		
+		data.setOperation(type);
 		data.setKey(new Item(term));
-		data.setValues(new Item[]{new Item(def)});
+		data.setValues(new Item[]{defItem});
 		
 		data = clientApp.getData(data);
 		if(data.getOperation() == JHelp.ERROR) {
 			showAlertWindow(data.getValue(0).getItem());
 		} else {
-			showAlertWindow(ADD_SUCCESS);
+			showAlertWindow(successMsg);
 			refreshDataInGUI(data);
 		}		
-	}
-	
-	void editButtonAction() {
-		JOptionPane.showMessageDialog(null, 
-				Thread.currentThread().getStackTrace()[1].getMethodName());
 	}
 	
 	void nextButtonAction() {

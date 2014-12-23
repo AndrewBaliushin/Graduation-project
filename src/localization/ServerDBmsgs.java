@@ -14,5 +14,7 @@ public class ServerDBmsgs {
 	public static final String REQUSET_WITH_EMPTY_ARG_MSG = "Can't use empty string";
 	public static final String REQUSET_TO_ADD_EXISTING = "Can't add existing term";
 	public static final String TERM_NOT_FOUND = "There is no such term in library";
+	public static final String UNKNOW_OPERATION = "Unknown operation";
+	public static final String NO_ID_IN_DEFINITION = "There is no #id in definition. Can't update";
 	
 }

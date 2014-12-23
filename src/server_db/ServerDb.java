@@ -40,6 +40,7 @@ public class ServerDb implements JHelp, Commandable {
     private PreparedStatement prepStmtFindTermDefinitions; 
 	private PreparedStatement prepStmtInsertIntoDef;
 	private PreparedStatement prepStmtInsertIntoTerm;
+	private PreparedStatement prepStmtUpdataTermDef;
     
 	public static void main(String[] args) {
 	    ServerDb sdb = new ServerDb();
@@ -116,6 +117,7 @@ public class ServerDb implements JHelp, Commandable {
     		prepStmtFindTerm = dbConnection.prepareStatement(FIND_TERM);
     		prepStmtInsertIntoDef = dbConnection.prepareStatement(INSERT_NEW_DEF);
     		prepStmtInsertIntoTerm = dbConnection.prepareStatement(INSERT_NEW_TERM);
+    		prepStmtUpdataTermDef = dbConnection.prepareStatement(UPDATE_DEFINITION);
     		
 			prepStmtFindTermDefinitions = dbConnection
 					.prepareStatement(FIND_QRY);
@@ -204,9 +206,11 @@ public class ServerDb implements JHelp, Commandable {
         	return findDefinitionsForTerm(data);
         } else if (data.getOperation() == JHelp.INSERT) {
         	return addNewEntryToDB(data);
+        } else if (data.getOperation() == JHelp.UPDATE) {
+        	return updateDefinition(data);
+        } else {
+            return Data.getErrorData(UNKNOW_OPERATION);
         }
-        //TODO
-        return Data.getErrorData("Unknown operation");
     }
     
     private Data findDefinitionsForTerm(Data data) {
@@ -274,13 +278,39 @@ public class ServerDb implements JHelp, Commandable {
 			
 			return data;
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return Data.getErrorData(ERROR_DURING_DB_OPERATION);
 		}
     }
     
-    private boolean isTermExist(String term) throws SQLException {
+    private Data updateDefinition(Data data) {
+		String def = data.getValue(0).getItem();
+		int id = data.getValue(0).getId();
+		
+		def = def.trim();
+		
+		if(def.isEmpty()) {
+			return Data.getErrorData(REQUSET_WITH_EMPTY_ARG_MSG);
+		}
+		if(id == 0) {
+			return Data.getErrorData(NO_ID_IN_DEFINITION);
+		}
+		
+		try {			
+			prepStmtUpdataTermDef.setString(1, def);
+			prepStmtUpdataTermDef.setInt(2, id);
+			
+			System.out.println(id);
+			System.out.println(prepStmtUpdataTermDef.executeUpdate());
+			
+			return data;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return Data.getErrorData(ERROR_DURING_DB_OPERATION);
+		}
+	}
+
+	private boolean isTermExist(String term) throws SQLException {
     	prepStmtFindTerm.setString(1, term);
     	prepStmtFindTerm.execute();
     	ResultSet rs = prepStmtFindTerm.getResultSet();
