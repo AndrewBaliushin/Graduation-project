@@ -2,7 +2,13 @@ package common;
 
 import java.util.Scanner;
 
-public class KeyboardCommand {
+/**
+ * Class for working with keyboard in separate thread and calling commands
+ * of {@link Commandable}
+ * @author andrew
+ *
+ */
+public class KeyboardCommandCaller {
 
 	public static Runnable getListner(final Commandable objToCommand) {
     	return new Runnable() {

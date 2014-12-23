@@ -6,6 +6,8 @@ package common;
 import java.io.Serializable;
 
 /**
+ * Class provided as part of assignment.
+ *  
  * This class presents string data from database. Objects of this type are used
  * by {@link common.Data} class.<br>
  * The class has three private attributes. Attribute <code>id</code>

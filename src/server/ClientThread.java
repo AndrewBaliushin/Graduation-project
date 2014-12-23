@@ -13,7 +13,7 @@ import common.JHelp;
 import client.Client;
 
 
-import static localization.ClientLabelAndMsgs.*;
+import static localization.ServerMsgs.*;
 
 /**
  * This class provides a network connection between end client of
@@ -26,21 +26,10 @@ import static localization.ClientLabelAndMsgs.*;
  */
 public class ClientThread implements JHelp, Runnable {
 
-    /**
-     *
-     */
+    
     private Server server;
-    /**
-     *
-     */
     private Socket clientSocket;
-    /**
-     *
-     */
     private ObjectInputStream input;
-    /**
-     *
-     */
     private ObjectOutputStream output;
 
     /**
@@ -57,7 +46,7 @@ public class ClientThread implements JHelp, Runnable {
 			input = new ObjectInputStream(clientSocket.getInputStream());
 			output = new ObjectOutputStream(clientSocket.getOutputStream());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			System.err.println(STREAMS_CREATION_ERR);
 			e.printStackTrace();
 		}
     }
@@ -73,7 +62,7 @@ public class ClientThread implements JHelp, Runnable {
 				System.err.println(CONNECTION_PROBLEM);
 				disconnect();				
 			} catch (EOFException e) {
-				System.out.println(DISCONNECTED_MSG);
+				System.out.println(DISCONNECT);
 				disconnect();
 			}
         }
@@ -93,31 +82,20 @@ public class ClientThread implements JHelp, Runnable {
 		} catch (StreamCorruptedException | EOFException e){
 			throw e;
 		} catch (ClassNotFoundException | IOException | ClassCastException e) {
-			System.err.println(OBJECT_STREAM_ERROR);
 			e.printStackTrace();
 			Thread.currentThread().interrupt();
 		}    	
     }
     
     /**
-     * Opens input and output streams for data interchanging with
-     * client application.  The method uses default parameters.
-     * @return error code. The method returns {@link JHelp#OK} if streams are
-     * successfully opened, otherwise the method returns {@link JHelp#ERROR}.
+     * Stub for Interface. Doesn't do anything.
      */
     public int connect() {
-    	//TODO
-        System.out.println("Already connected");
         return JHelp.OK;
     }
 
     /**
-     * Opens input and output streams for data interchanging with
-     * client application. This method uses parameters specified by parameter
-     * <code>args</code>.
-     * @param args defines properties for input and output streams.
-     * @return error code. The method returns {@link JHelp#OK} if streams are
-     * successfully opened, otherwise the method returns {@link JHelp#ERROR}.
+     * Stub for Interface. Doesn't do anything.
      */
     public int connect(String[] args) {
         return connect();
@@ -135,22 +113,22 @@ public class ClientThread implements JHelp, Runnable {
     }
 
     /**
-     * The method closes connection with client application.
-     * @return error code. The method returns {@link JHelp#OK} if input/output 
-     * streams and connection with client application was closed successfully,
-     * otherwise the method returns {@link JHelp#ERROR}.
+     * The method closes connection with client application. Errors ignored.
+     * @return {@link JHelp#OK}
      */
     public int disconnect() {
         Thread.currentThread().interrupt();
         server.interuptAndRemoveClientThread(Thread.currentThread());
         
         try {
-			input.close();
-			output.close();
-	        clientSocket.close();
-		} catch (IOException e) {
-			System.err.println(SOCKET_CLOSE_ERR_MSG);
-		}
+        	input.close();
+        } catch (Exception ignore) {}
+        try {
+        	output.close();
+        } catch (Exception ignore) {}
+        try {
+        	clientSocket.close();
+        } catch (Exception ignore) {}
         
         return JHelp.OK;
     }

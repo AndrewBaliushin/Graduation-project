@@ -1,11 +1,18 @@
 package common;
 
+import gui.JClient;
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
 
 import static settings.Config.*;
 
+/**
+ * Basic operations with txt files for {@link JClient}
+ * @author Andrew Baliushin
+ *
+ */
 public class FileHelper {	
 	
 	public static InetSocketAddress getIpAndPortFromConfigFile(File cfg) 

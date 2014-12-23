@@ -46,4 +46,6 @@ public class ClientLabelAndMsgs {
 	
 	public static final String FILE_CHOOSER_FILTER_DESCRIPTON = 
 			Config.CONFIG_FILE_EXTENSION + " files only";
+	
+	public static final String REFLECTIVE_INVOKE_ERR = "Error occured in reflective operation while invoking JClient method";
 }

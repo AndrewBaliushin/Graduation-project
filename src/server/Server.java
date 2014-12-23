@@ -48,7 +48,7 @@ public class Server implements JHelp, Commandable {
     public Server(int port, int dbPort) {
     	clientsThreads = new ArrayList<>();
     	
-    	Thread cmdListner = new Thread(KeyboardCommand.getListner(this));
+    	Thread cmdListner = new Thread(KeyboardCommandCaller.getListner(this));
     	cmdListner.start();
     	
         createServerSocket(port);
@@ -147,11 +147,14 @@ public class Server implements JHelp, Commandable {
 		}
     }
 
-    /**
-     * The method closes connection with database.
-     * @return error code. The method returns {@link JHelp#OK} if a connection
-     * with database ({@link ServerDb} object) closed successfully,
-     * otherwise the method returns {@link JHelp#ERROR} or any error code.
+    public void interuptAndRemoveClientThread(Thread clientThread) {
+		clientThread.interrupt();
+		clientsThreads.remove(clientThread);
+	}
+
+	/**
+     * The method closes connection with database. Errors ignored.
+     * @return {@link JHelp#OK}
      */
     public int disconnect() {
     	for(Thread t : clientsThreads) {
@@ -172,10 +175,5 @@ public class Server implements JHelp, Commandable {
     	} catch (Exception ignore) {}
     	
         return OK;
-    }
-    
-    public void interuptAndRemoveClientThread(Thread clientThread) {
-    	clientThread.interrupt();
-    	clientsThreads.remove(clientThread);
     }
 }

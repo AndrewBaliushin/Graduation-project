@@ -5,9 +5,8 @@ import java.lang.reflect.Modifier;
 
 /**
  * Names of the methods in {@link JClient} which contain actions for buttons and components.
- * Values must be consistent with methods of JClient or error will be shown in console.
+ * Values(method names) must be consistent with methods of JClient or error will be shown in console.
  * @author Andrew Baliushin
- *
  */
 enum JClientActionMethodNames {
 	FIND_BUTTON_ACTION("findButtonAction"), 

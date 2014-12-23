@@ -6,6 +6,8 @@ package common;
 import java.io.Serializable;
 
 /**
+ * Class provided with assignment.
+ * 
  * This class presents data for client form: term and it's definitions. Class
  * has three private attributes. Attribute <code>operation</code> defines action
  * execute with the data in database. Attribute <code>key</code> presents a term

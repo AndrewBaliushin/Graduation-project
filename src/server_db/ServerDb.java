@@ -11,7 +11,7 @@ import common.Commandable;
 import common.Data;
 import common.Item;
 import common.JHelp;
-import common.KeyboardCommand;
+import common.KeyboardCommandCaller;
 
 
 import settings.Config;
@@ -65,7 +65,7 @@ public class ServerDb implements JHelp, Commandable {
         connect(); //to db
         createAndPrepareStatements();
         
-        Thread cmdListner = new Thread(KeyboardCommand.getListner(this));
+        Thread cmdListner = new Thread(KeyboardCommandCaller.getListner(this));
     	cmdListner.start();
     }
     
@@ -337,7 +337,8 @@ public class ServerDb implements JHelp, Commandable {
     
     /**
      * Disconnects <code>ServerDb</code> object from a database and closes all 
-     * opened sockets.
+     * opened sockets. Errors ignored.
+     * @return {@link JHelp#DISCONNECT}
      */
     public int disconnect() {
         try {

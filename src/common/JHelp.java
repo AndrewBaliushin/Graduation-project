@@ -5,6 +5,8 @@
 package common;
 
 /**
+ *  Interface provided with assignment.
+ * 
  * Interface for implementation by <code>Client, MClient, Server</code> and
  * <code>ServerDb</code> classes.
  * @author <strong >Y.D.Zakovryashin, 2009</strong>
