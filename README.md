@@ -1,13 +1,13 @@
 # Java courses graduation project #
 
 ## Description ##
-Work with database where "term -- definition" data is stored. Example: vocabulary. 
+Three-tier system with GUI Client, Server and DB Server.
+System works with database where "term -- definition" data is stored. Example: vocabulary. 
 
 ## Architecture ##
-Three-tier system:
-1) Client app with GUI
-2) Server that process requests from many clients to single DB server
-3) DB server that work with database.
+1. Client app with GUI
+2. Server that process requests from many clients to single DB server
+3. DB server that work with database.
 
 ### Features ###
 * Multi-client server.
@@ -17,6 +17,7 @@ Three-tier system:
 * Connection config for Client in separate .cfg file.
 
 ![screenshot][screen1]
+
 ![screenshot][screen2]
 
 [screen1]: https://github.com/AndrewBaliushin/Graduation-project/tree/master/screen1.png "Screenshot 1"
