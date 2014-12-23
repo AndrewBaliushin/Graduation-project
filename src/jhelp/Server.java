@@ -15,7 +15,7 @@ import static localization.ServerMsgs.*;
  * @see jhelp.ClientThread
  * @see jhelp.ServerDb
  */
-public class Server implements JHelp {
+public class Server implements JHelp, Commandable {
 	
 	private ServerSocket serverSocket;
 
@@ -43,8 +43,8 @@ public class Server implements JHelp {
     public Server(int port, int dbPort) {
     	clientsThreads = new ArrayList<>();
     	
-    	Thread kyeboardListner = new Thread(keyboardCommandListner());
-    	kyeboardListner.start();
+    	Thread cmdListner = new Thread(KeyboardCommand.getListner(this));
+    	cmdListner.start();
     	
         createServerSocket(port);
         
@@ -65,6 +65,17 @@ public class Server implements JHelp {
 	    }
 	}
 
+	public void executeCommand(String cmd) {
+		switch (cmd) {
+		case EXIT_CMD:
+			disconnect();
+	    	System.exit(0);
+			break;
+		default:
+			System.out.println(COMMAND_NOT_FOUND);
+		}
+	}
+
 	private void createServerSocket(int port) {
     	try {
 			serverSocket = new ServerSocket(port);
@@ -74,31 +85,6 @@ public class Server implements JHelp {
 		}
     }
     
-    private Runnable keyboardCommandListner() {
-    	return new Runnable() {
-            @Override
-            public void run() {
-                @SuppressWarnings("resource")
-				Scanner scan = new Scanner(System.in);
-                String input = "";
-                while (true) {                 
-                    input = scan.nextLine();
-                    Server.this.executeCommand(input);
-                }                
-            }
-    	};
-    }
-    
-    private void executeCommand(String cmd) {
-    	switch (cmd) {
-		case EXIT_CMD:
-			exit();
-			break;
-		default:
-			System.out.println(COMMAND_NOT_FOUND);
-    	}
-    }
-
     /**
      * The method sets connection to database ({@link jhelp.ServerDb} object) and
      * create {@link java.net.ServerSocket} object for waiting of client's
@@ -164,31 +150,26 @@ public class Server implements JHelp {
      */
     public int disconnect() {
     	for(Thread t : clientsThreads) {
-    		interuptAndRemoveThread(t);
+    		interuptAndRemoveClientThread(t);
     	}
     	
     	try {
 			inputFromDBServ.close();
-		} catch (IOException ignore) {}
+		} catch (Exception ignore) {}
     	try {
 			outputToDBServ.close();
-    	} catch (IOException ignore) {}
+    	} catch (Exception ignore) {}
     	try {
 			socketToDBServ.close();
-    	} catch (IOException ignore) {}
+    	} catch (Exception ignore) {}
     	try {
 			serverSocket.close();
-    	} catch (IOException ignore) {}
+    	} catch (Exception ignore) {}
     	
         return OK;
     }
     
-    public void exit() {
-    	disconnect();
-    	System.exit(0);
-    }
-    
-    public void interuptAndRemoveThread(Thread clientThread) {
+    public void interuptAndRemoveClientThread(Thread clientThread) {
     	clientThread.interrupt();
     	clientsThreads.remove(clientThread);
     }

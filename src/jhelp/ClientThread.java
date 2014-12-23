@@ -135,7 +135,7 @@ public class ClientThread implements JHelp, Runnable {
      */
     public int disconnect() {
         Thread.currentThread().interrupt();
-        server.interuptAndRemoveThread(Thread.currentThread());
+        server.interuptAndRemoveClientThread(Thread.currentThread());
         
         try {
 			input.close();

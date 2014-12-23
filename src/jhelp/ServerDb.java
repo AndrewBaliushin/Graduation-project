@@ -10,6 +10,7 @@ import java.util.List;
 import settings.Config;
 
 import static localization.ServerDBmsgs.*;
+import static localization.ServerMsgs.COMMAND_NOT_FOUND;
 import static settings.Config.*;
 import static settings.SQLqueries.*;
 
@@ -18,7 +19,7 @@ import static settings.SQLqueries.*;
  * This class presents server directly working with database.
  * @author Andrew Baliushin
  */
-public class ServerDb implements JHelp {
+public class ServerDb implements JHelp, Commandable {
 
     private ServerSocket serverSocket;
     private Socket clientSocket;
@@ -51,6 +52,9 @@ public class ServerDb implements JHelp {
         loadDbDriver();
         connect(); //to db
         prepareStatements();
+        
+        Thread cmdListner = new Thread(KeyboardCommand.getListner(this));
+    	cmdListner.start();
     }
     
     /**
@@ -62,6 +66,17 @@ public class ServerDb implements JHelp {
 				acceptConnection();
 			}
 			executeClientRequest();			
+		}
+	}
+	
+	public void executeCommand(String cmd) {
+		switch (cmd) {
+		case EXIT_CMD:
+			disconnect();
+			System.exit(0);
+			break;
+		default:
+			System.out.println(COMMAND_NOT_FOUND);
 		}
 	}
 
@@ -217,16 +232,16 @@ public class ServerDb implements JHelp {
     public int disconnect() {
         try {
 			clientSocket.close();
-		} catch (IOException ignore) {}
+		} catch (Exception ignore) {}
         try {
 			serverSocket.close();
-		} catch (IOException ignore) {}
+		} catch (Exception ignore) {}
         try {
 			prepStmtFindTermDefinitions.close();
-		} catch (SQLException ignore) {}
+		} catch (Exception ignore) {}
         try {
 			dbConnection.close();
-		} catch (SQLException ignore) {}
+		} catch (Exception ignore) {}
         return JHelp.DISCONNECT;
     }
 }
