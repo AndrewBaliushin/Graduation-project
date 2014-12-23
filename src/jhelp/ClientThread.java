@@ -6,7 +6,7 @@ package jhelp;
 import java.io.*;
 import java.net.*;
 
-import static localization.LabelsAndMsges.*;
+import static localization.ClientLabelAndMsgs.*;
 
 /**
  * This class provides a network connection between end client of
@@ -81,7 +81,7 @@ public class ClientThread implements JHelp, Runnable {
     private void sendDataToServerAndReturnAnswerToClient() throws StreamCorruptedException, EOFException {
     	try {    		
 			Data requestData = (Data) input.readObject();
-			Data answerData = server.getData(requestData);
+			Data answerData = getData(requestData);
 			output.writeObject(answerData);			
 		} catch (StreamCorruptedException | EOFException e){
 			throw e;
@@ -99,7 +99,8 @@ public class ClientThread implements JHelp, Runnable {
      * successfully opened, otherwise the method returns {@link JHelp#ERROR}.
      */
     public int connect() {
-        System.out.println("MClient: connect");
+    	//TODO
+        System.out.println("Already connected");
         return JHelp.OK;
     }
 
@@ -112,8 +113,7 @@ public class ClientThread implements JHelp, Runnable {
      * successfully opened, otherwise the method returns {@link JHelp#ERROR}.
      */
     public int connect(String[] args) {
-        System.out.println("MClient: connect");
-        return JHelp.OK;
+        return connect();
     }
 
     /**
@@ -124,8 +124,7 @@ public class ClientThread implements JHelp, Runnable {
      * @return modified {@link Data} object
      */
     public Data getData(Data data) {
-        System.out.println("Client: getData");
-        return null;
+       return server.getData(data);
     }
 
     /**
@@ -136,6 +135,7 @@ public class ClientThread implements JHelp, Runnable {
      */
     public int disconnect() {
         Thread.currentThread().interrupt();
+        server.interuptAndRemoveThread(Thread.currentThread());
         
         try {
 			input.close();

@@ -12,7 +12,7 @@ public class JHelpActionListnerDispetcher {
 		this.jClient = jClient;
 	}
 
-	public ActionListener createAListnerWithAttachment(final JClientActionMethodNames methodName) {
+	public ActionListener createListnerWithAttachment(final JClientActionMethodNames methodName) {
 		ActionListener l = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -28,7 +28,8 @@ public class JHelpActionListnerDispetcher {
 			Method method = jClient.getClass().getDeclaredMethod(methodName.getName());			
 			method.invoke(jClient);
 		} catch (ReflectiveOperationException ex) {
-			System.err.println("Error occured in reflective oeration while invoking JClient method");
+			//TODO
+			System.err.println("Error occured in reflective operation while invoking JClient method");
 			System.err.println(ex.getMessage());
 			ex.printStackTrace();
 		}	

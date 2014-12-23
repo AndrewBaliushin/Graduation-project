@@ -1,26 +1,16 @@
-/*
- * Server.java
- *
- */
 package jhelp;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.io.*;
+import java.net.*;
+import java.util.*;
 
 import static settings.Config.*;
-import static localization.LabelsAndMsges.*;
+import static localization.ServerMsgs.*;
 
 /**
- * This class sets a network connection between end client's objects
- * of {@link jhelp.Client} type and single {@link jhelp.ServerDb} object.
+ * This class sets a network connection between many {@link jhelp.Client} objects
+ * and single {@link jhelp.ServerDb} object.
  * @author Andrew Baliushin
- * @version 1.0
  * @see jhelp.Client
  * @see jhelp.ClientThread
  * @see jhelp.ServerDb
@@ -31,32 +21,24 @@ public class Server implements JHelp {
 
     private List<Thread> clientsThreads;
  
-    private ObjectInputStream input;
-    private ObjectOutputStream output;
+    private Socket socketToDBServ;
+    private ObjectInputStream inputFromDBServ;
+    private ObjectOutputStream outputToDBServ;
     
-    private boolean listningForConnections;
-    
-    /**
-	 * 
-	 * @param args
-	 */
 	public static void main(String[] args) {
 	    Server server = new Server();
-	    if (server.connect(args) == JHelp.OK) {
-	        server.run();
-	        server.disconnect();
-	    }
+	    server.run();
 	}
 
-	/** Creates a new instance of Server */
+	/** Construct with default settings {@link settings.Config} */
     public Server() {
         this(DEFAULT_SERV_PORT, DEFAULT_DATABASE_PORT);
     }
 
     /**
-     *
-     * @param port
-     * @param dbPort
+     * Construct with user settings
+     * @param port -- port to run server
+     * @param dbPort -- port of ServerDB
      */
     public Server(int port, int dbPort) {
     	clientsThreads = new ArrayList<>();
@@ -64,34 +46,35 @@ public class Server implements JHelp {
     	Thread kyeboardListner = new Thread(keyboardCommandListner());
     	kyeboardListner.start();
     	
-        try {
+        createServerSocket(port);
+        
+        connect();
+    }
+    
+    public void run() {
+	    while(true) {
+	    	try {
+	    		Socket newSocket = serverSocket.accept();
+	    		Thread newClient = new Thread(new ClientThread(this, newSocket));
+	    		clientsThreads.add(newClient);
+	    		newClient.start();
+	    	} catch (IOException e) {
+				System.err.println(CLIENT_SOCKET_CREATION_ERR);
+				e.printStackTrace();
+			}
+	    }
+	}
+
+	private void createServerSocket(int port) {
+    	try {
 			serverSocket = new ServerSocket(port);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			System.err.println(SERVER_SOCKET_CREATION_ERR);
 			e.printStackTrace();
 		}
     }
-
-    /**
-     *
-     */
-    protected void run() {
-    	listningForConnections = true;
-    	
-        while(listningForConnections) {
-        	try {
-        		Socket newSocket = serverSocket.accept();
-        		Thread newClient = new Thread(new ClientThread(this, newSocket));
-        		clientsThreads.add(newClient);
-        		newClient.start();
-        	} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-        }
-    }
     
-    protected Runnable keyboardCommandListner() {
+    private Runnable keyboardCommandListner() {
     	return new Runnable() {
             @Override
             public void run() {
@@ -106,7 +89,7 @@ public class Server implements JHelp {
     	};
     }
     
-    protected void executeCommand(String cmd) {
+    private void executeCommand(String cmd) {
     	switch (cmd) {
 		case EXIT_CMD:
 			exit();
@@ -124,8 +107,8 @@ public class Server implements JHelp {
      * successfully opened, otherwise the method returns {@link JHelp#ERROR}.
      */
     public int connect() {
-        System.out.println("SERVER: connect");
-        return OK;
+        return connect(new String[]{DEFAULT_DB_SERV_HOST,
+        		Integer.toString(DEFAULT_DB_SERV_PORT)});
     }
 
     /**
@@ -137,8 +120,23 @@ public class Server implements JHelp {
      * openeds uccessfully, otherwise the method returns {@link JHelp#ERROR}.
      */
     public int connect(String[] args) {
-        System.out.println("SERVER: connect");
-        return OK;
+    	if(args.length < 2) {
+        	return connect();
+        } 
+    	
+    	String dbHost = args[0];
+    	int dbPort = Integer.parseInt(args[1]);
+    	
+    	try {
+			socketToDBServ = new Socket(dbHost, dbPort);
+			
+			outputToDBServ = new ObjectOutputStream(socketToDBServ.getOutputStream());
+			inputFromDBServ = new ObjectInputStream(socketToDBServ.getInputStream());
+			return JHelp.OK;
+    	} catch (Exception e) {
+    		System.err.println(SERVER_DB_CONNECTION_ERR);
+    		return JHelp.ERROR;
+		}    
     }
 
     /**
@@ -148,10 +146,14 @@ public class Server implements JHelp {
      * @param data Initial {@link Data} object which was obtained from client
      * application.
      * @return modified {@link Data} object
-     */
-    public synchronized Data getData(Data data) {
-    	Item[] items = {new Item("test1"), new Item("test2")};
-        return new Data(DISCONNECT, new Item("test"), items);
+     */   
+    public Data getData(Data data) {
+        try {
+			return DataTransferHelper.exchangeDataWithServ(data, inputFromDBServ, outputToDBServ);			
+		} catch (StreamCorruptedException e) {
+			e.printStackTrace();
+			return Data.getErrorData(CONNECTION_TO_SDB_PROBLEM);			
+		}
     }
 
     /**
@@ -161,7 +163,23 @@ public class Server implements JHelp {
      * otherwise the method returns {@link JHelp#ERROR} or any error code.
      */
     public int disconnect() {
-        System.out.println("SERVER: disconnect");
+    	for(Thread t : clientsThreads) {
+    		interuptAndRemoveThread(t);
+    	}
+    	
+    	try {
+			inputFromDBServ.close();
+		} catch (IOException ignore) {}
+    	try {
+			outputToDBServ.close();
+    	} catch (IOException ignore) {}
+    	try {
+			socketToDBServ.close();
+    	} catch (IOException ignore) {}
+    	try {
+			serverSocket.close();
+    	} catch (IOException ignore) {}
+    	
         return OK;
     }
     
@@ -170,7 +188,7 @@ public class Server implements JHelp {
     	System.exit(0);
     }
     
-    public void stopAndRemoveThread(Thread clientThread) {
+    public void interuptAndRemoveThread(Thread clientThread) {
     	clientThread.interrupt();
     	clientsThreads.remove(clientThread);
     }

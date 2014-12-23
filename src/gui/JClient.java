@@ -14,18 +14,17 @@ import java.util.Map.Entry;
 
 import jhelp.Client;
 import jhelp.Data;
-import jhelp.FileOpearations;
+import jhelp.FileHelper;
 import jhelp.Item;
 import jhelp.JHelp;
 
-import static localization.LabelsAndMsges.*;
+import static localization.ClientLabelAndMsgs.*;
 import static settings.GUIconfig.*;
 import static settings.Config.*;
 import static gui.JClientActionMethodNames.*;
 
 /**
  * GUI for {@link jhelp.Client}
- * {@link jhelp.Client} must be already connected to server.
  * @author Andrew Baliushin
  */
 @SuppressWarnings("serial")
@@ -35,7 +34,7 @@ public class JClient extends JFrame{
 	
 	private JHelpActionListnerDispetcher actionListnerDispetcher;
 	
-	private Data dataContainer;
+	private Data data;
 	
 	private int serverPort;
 	private String serverHost;
@@ -81,7 +80,7 @@ public class JClient extends JFrame{
 	}
 	
 	private void setPortHostAndTheirLabelsToDefault() {
-		changeHostHostAndLabel(DEFAULT_SERV_HOST);
+		changeHostAndLabel(DEFAULT_SERV_HOST);
 		changePortAndLabel(DEFAULT_SERV_PORT);
 	}
 		
@@ -175,6 +174,8 @@ public class JClient extends JFrame{
 		int[] dim = DEFINITION_AREA_DIMENSION;
 		definitionArea = new JTextArea(dim[0], dim[1]);
 		definitionArea.setBorder(BorderFactory.createLoweredBevelBorder());
+		definitionArea.setLineWrap(true);
+		definitionArea.setWrapStyleWord(true);
 		
 		defPanel.add(definitionArea);
 		
@@ -265,7 +266,7 @@ public class JClient extends JFrame{
 		return settingPanel;
 	}
 	
-	private void changeHostHostAndLabel(String host) {
+	private void changeHostAndLabel(String host) {
 		this.serverHost = host;
 		hostLabel.setText(HOST_LABEL_PREFIX + host);
 	}
@@ -309,7 +310,6 @@ public class JClient extends JFrame{
 	
 	private void setDefinition(String cont) {
 		definitionArea.setText(cont);
-		
 	}
 	
 	private void refreshPrevNextButtonStatus() {
@@ -332,30 +332,22 @@ public class JClient extends JFrame{
 	}
 	
 	private void attachActionListners() {
-		Map<JComponent, JClientActionMethodNames> actionsForComponents =
-				new HashMap<JComponent, JClientActionMethodNames>();
+		Map<JButton, JClientActionMethodNames> actionsForButtons =
+				new HashMap<JButton, JClientActionMethodNames>();
 		
-		actionsForComponents.put(findButton, FIND_BUTTON_ACTION);
-		actionsForComponents.put(addButton, ADD_BUTON_ACTION);
-		actionsForComponents.put(editButton, EDIT_BUTTON_ACTION);
-		actionsForComponents.put(nextButton, NEXT_BUTTON_ACTION);
-		actionsForComponents.put(previousButton, PREV_BUTTON_ACTION);
-		actionsForComponents.put(exitButton, EXIT_BUTTON_ACTION);
+		actionsForButtons.put(findButton, FIND_BUTTON_ACTION);
+		actionsForButtons.put(addButton, ADD_BUTON_ACTION);
+		actionsForButtons.put(editButton, EDIT_BUTTON_ACTION);
+		actionsForButtons.put(nextButton, NEXT_BUTTON_ACTION);
+		actionsForButtons.put(previousButton, PREV_BUTTON_ACTION);
+		actionsForButtons.put(exitButton, EXIT_BUTTON_ACTION);
 		
+		actionsForButtons.put(chooseFileButton, CHOOSE_FILE_BUTTON_ACTION);
+		actionsForButtons.put(connectButton, CONNECT_BUTTON_ACTION);
 		
-		actionsForComponents.put(chooseFileButton, CHOOSE_FILE_BUTTON_ACTION);
-		actionsForComponents.put(connectButton, CONNECT_BUTTON_ACTION);
-		
-		for (Entry<JComponent, JClientActionMethodNames> m : actionsForComponents.entrySet()) {
-			try {
-				((JButton) m.getKey())
-						.addActionListener(actionListnerDispetcher
-								.createAListnerWithAttachment(m.getValue()));
-			} catch (ClassCastException ex) {
-				System.err.println("Exception in " + this.getClass().getName());
-				System.err.println("Can't cast to JButton (method to attach: "
-						+ m.getValue().getName());
-			}
+		for (Entry<JButton, JClientActionMethodNames> m : actionsForButtons.entrySet()) {
+			m.getKey().addActionListener(
+					actionListnerDispetcher.createListnerWithAttachment(m.getValue()));			
 		}
 	}
 	
@@ -364,15 +356,15 @@ public class JClient extends JFrame{
 			return;
 		}
 		
-		dataContainer = new Data();
-		dataContainer.setOperation(JHelp.SELECT);
-		dataContainer.setKey(new Item(searchField.getText()));
+		data = new Data();
+		data.setOperation(JHelp.SELECT);
+		data.setKey(new Item(searchField.getText()));
 		
-		dataContainer = clientApp.getData(dataContainer);
-		if(dataContainer.getOperation() == JHelp.ERROR) {
-			showAlertWindow(dataContainer.getValue(0).getItem());
+		data = clientApp.getData(data);
+		if(data.getOperation() == JHelp.ERROR) {
+			showAlertWindow(data.getValue(0).getItem());
 		} else {
-			refreshDataInGUI(dataContainer);
+			refreshDataInGUI(data);
 		}						
 	}
 	
@@ -415,8 +407,8 @@ public class JClient extends JFrame{
 		if (returnValue == JFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
             try {
-				InetSocketAddress socAdr = FileOpearations.getIpAndPortFromConfigFile(file);
-				changeHostHostAndLabel(socAdr.getHostName());
+				InetSocketAddress socAdr = FileHelper.getIpAndPortFromConfigFile(file);
+				changeHostAndLabel(socAdr.getHostName());
 				changePortAndLabel(socAdr.getPort());				
 			} catch (IOException e) {
 				showAlertWindow(CFG_FILE_ERROR);

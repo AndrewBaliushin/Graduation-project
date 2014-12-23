@@ -6,7 +6,7 @@ import java.util.*;
 
 import static settings.Config.*;
 
-public class FileOpearations {	
+public class FileHelper {	
 	
 	public static InetSocketAddress getIpAndPortFromConfigFile(File cfg) 
 			throws IOException {

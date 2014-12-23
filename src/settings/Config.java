@@ -4,8 +4,14 @@ public class Config {
 	
 	public static final String DEFAULT_SERV_HOST = "127.0.0.1";
 	public static final int DEFAULT_SERV_PORT = 12345;
-	public static final int DEFAULT_DB_SERV_PORT = 12346;
 	
+	public static final String DEFAULT_DB_SERV_HOST = "127.0.0.1";
+	public static final int DEFAULT_DB_SERV_PORT = 12346;
+
+    public static final String DB_DRIVER = "org.apache.derby.jdbc.ClientDriver";
+	public static final String DB_URL = "jdbc:derby://localhost:1527/avalon";
+	public static final String DB_USER = "root";
+	public static final String DB_PASS = "root";
 	
 	public static final String APP_TITLE = "JHelp";
 	

@@ -1,43 +1,22 @@
-/*
- * ServerDb.java
- *
- */
 package jhelp;
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
 
+import java.net.*;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import settings.Config;
+
+import static localization.ServerDBmsgs.*;
 import static settings.Config.*;
+import static settings.SQLqueries.*;
+
 
 /**
  * This class presents server directly working with database.
- * The complete connection string should take the form of:<br>
- * <code><pre>
- *     jdbc:subprotocol://servername:port/datasource:user=username:password=password
- * </pre></code>
- * Sample for using MS Access data source:<br>
- * <code><pre>
- *  private static final String accessDBURLPrefix
- *      = "jdbc:odbc:Driver={Microsoft Access Driver (*.mdb)};DBQ=";
- *  private static final String accessDBURLSuffix
- *      = ";DriverID=22;READONLY=false}";
- *  // Initialize the JdbcOdbc Bridge Driver
- *  try {
- *         Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
- *      } catch(ClassNotFoundException e) {
- *         System.err.println("JdbcOdbc Bridge Driver not found!");
- *      }
- *
- *  // Example: method for connection to a Access Database
- *  public Connection getAccessDBConnection(String filename)
- *                           throws SQLException {
- *       String databaseURL = accessDBURLPrefix + filename + accessDBURLSuffix;
- *       return DriverManager.getConnection(databaseURL, "", "");
- *   }
- *</pre></code>
- *  @author <strong >Y.D.Zakovryashin, 2009</strong>
+ * @author Andrew Baliushin
  */
 public class ServerDb implements JHelp {
 
@@ -45,19 +24,22 @@ public class ServerDb implements JHelp {
     private Socket clientSocket;
     private ObjectInputStream input;
     private ObjectOutputStream output;
+    
+    private Connection dbConnection;
+    
+    private PreparedStatement prepStmtFindTermDefinitions;    
+    
+	public static void main(String[] args) {
+	    ServerDb sdb = new ServerDb();
+	    sdb.run();
+	}
 
-    /**
-     * Creates a new instance of <code>ServerDb</code> with default parameters.
-     * Default parameters are:<br>
-     * <ol>
-     * <li><code>ServerDb</code> host is &laquo;localhost&raquo;;</li>
-     * <li>{@link java.net.ServerSocket} is opened on
-     * {@link jhelp.JHelp#DEFAULT_DATABASE_PORT};</li>
-     * </ol>
+	/**
+     * Creates a new instance of <code>ServerDb</code> 
+     * with {@link Config#DEFAULT_DB_SERV_PORT}
      */
     public ServerDb() {
         this(DEFAULT_DB_SERV_PORT);
-        System.out.println("SERVERDb: default constructor");
     }
 
     /**
@@ -65,53 +47,117 @@ public class ServerDb implements JHelp {
      * @param port defines port for {@link java.net.ServerSocket} object.
      */
     public ServerDb(int port) {
-        System.out.println("SERVERDb: constructor");
+        createServerSocket(port);
+        loadDbDriver();
+        connect(); //to db
+        prepareStatements();
+    }
+    
+    /**
+	 * Process client requests.
+	 */
+	public void run() {
+		while(true) {
+			if (clientSocket == null || clientSocket.isClosed()) {
+				acceptConnection();
+			}
+			executeClientRequest();			
+		}
+	}
+
+	private void createServerSocket(int port) {
+    	try {
+			serverSocket = new ServerSocket(port);
+		} catch (IOException e) {
+			System.err.println(SOCKET_CREATION_ERR);
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+		}
     }
 
-    /**
-     * Constructor creates new instance of <code>ServerDb</code>. 
-     * @param args array of {@link java.lang.String} type contains connection
-     * parameters.
-     */
-    public ServerDb(String[] args) {
-        System.out.println("SERVERDb: constructor");
+    private void loadDbDriver() {
+		try {
+	        Class.forName(DB_DRIVER);
+	    } catch (ClassNotFoundException e) {
+	    	System.err.println(DB_DRIVER_LOAD_ERR);
+	    	System.err.println(e.getMessage());
+	        e.printStackTrace();
+	    }
+	}
+    
+    private void prepareStatements() {
+    	try {
+			prepStmtFindTermDefinitions = dbConnection
+					.prepareStatement(FIND_QRY);
+		} catch (SQLException e) {
+			System.err.println(STMT_PREPARATION_ERR);
+	    	System.err.println(e.getMessage());
+	        e.printStackTrace();
+		}
+    }
+    
+    private void acceptConnection() {
+		try {
+			clientSocket = serverSocket.accept();
+			input = new ObjectInputStream(clientSocket.getInputStream());
+			output = new ObjectOutputStream(clientSocket.getOutputStream());
+		} catch (IOException e) {
+			System.err.println(SOCKET_CREATION_ERR);
+	    	System.err.println(e.getMessage());
+	        e.printStackTrace();
+		}
+	}
+    
+    private void executeClientRequest() {
+    	try {    		
+			Data requestData = (Data) input.readObject();
+			
+			Data answerData = getData(requestData);
+			
+			output.writeObject(answerData);			
+		} catch (StreamCorruptedException | EOFException e){
+			System.out.println(CLIENT_CONNECTION_LOST);
+			killClientConnection();
+		} catch (ClassNotFoundException | IOException | ClassCastException e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+		}    	
+    }
+    
+    private void killClientConnection() {
+    	try {
+			input.close();
+			output.close();
+	        clientSocket.close();
+		} catch (IOException e) {
+			System.err.println(SOCKET_CLOSE_ERR);
+		} finally {
+			clientSocket = null;
+		}
     }
 
-    /**
-     * Start method for <code>ServerDb</code> application.
-     * @param args array of {@link java.lang.String} type contains connection
-     * parameters.
-     */
-    public static void main(String[] args) {
-        System.out.println("SERVERDb: main");
-    }
-
-    /**
-     * Method defines job cycle for client request processing.
-     */
-    private void run() {
-        System.out.println("SERVERDb: run");
-    }
-
-    /**
-     *
+	/**
+	 * Connects to DB using default {@link Config}
      * @return error code. The method returns {@link JHelp#OK} if streams are
      * opened successfully, otherwise the method returns {@link JHelp#ERROR}.
      */
     public int connect() {
-        System.out.println("SERVERDb: connect");
-        return JHelp.READY;
+    	try {
+            dbConnection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+            return JHelp.READY;
+        } catch (SQLException e) {
+        	System.err.println(DB_CONNECT_ERR);
+	    	System.err.println(e.getMessage());
+	        e.printStackTrace();
+	        return JHelp.ERROR;
+        }
     }
 
     /**
-     * Method sets connection to database and create {@link java.net.ServerSocket}
-     * object for waiting of client's connection requests.
-     * @return error code. Method returns {@link jhelp.JHelp#READY} in success
-     * case. Otherwise method return {@link jhelp.JHelp#ERROR} or error code.
+   	 * Straight redirect to {@link #connect()}
      */
     public int connect(String[] args) {
-        System.out.println("SERVERDb: connect");
-        return JHelp.READY;
+    	return connect();    	
     }
 
     /**
@@ -120,14 +166,46 @@ public class ServerDb implements JHelp {
      * @return object of {@link jhelp.Data} type with results of request to a
      * database.
      * @see Data
-     * @since 1.0
      */
     public Data getData(Data data) {
-        System.out.println("SERVERDb: getData");
-        return null;
+        if(data.getOperation() == JHelp.SELECT) {
+        	return findDefinitionsForTerm(data);
+        }
+        return Data.getErrorData("Unknown operation");
     }
+    
+    private Data findDefinitionsForTerm(Data rqstData) {
+    	String term = rqstData.getKey().getItem();
+    	
+    	if(term.trim().isEmpty()) {
+    		return Data.getErrorData(REQUSET_FOR_EMPTY_TERM_MSG);
+    	}    	
+    	
+    	rqstData.setValues(null);
+    	
+    	List<Item> tmp = new ArrayList<>();
+    	
+		try {
+			prepStmtFindTermDefinitions.setString(1, term);
+			if(prepStmtFindTermDefinitions.execute()) {
+				ResultSet rs = prepStmtFindTermDefinitions.getResultSet();
+				while(rs.next()){
+					String definition = rs.getString(1);
+					int defId = rs.getInt(3);
+					tmp.add(new Item(defId, definition, JHelp.ORIGIN));
+				}
+				rqstData.setValues(tmp.toArray(new Item[tmp.size()]));
+				return rqstData;
+			} else {
+				return Data.getErrorData("Can't find definition");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return Data.getErrorData(ERROR_DURING_DB_OPERATION);
+		}
+	}
 
-    /**
+	/**
      * Method disconnects <code>ServerDb</code> object from a database and closes
      * {@link java.net.ServerSocket} object.
      * @return disconnect result. Method returns {@link #DISCONNECT} value, if
@@ -137,7 +215,18 @@ public class ServerDb implements JHelp {
      * @since 1.0
      */
     public int disconnect() {
-        System.out.println("SERVERDb: disconnect");
+        try {
+			clientSocket.close();
+		} catch (IOException ignore) {}
+        try {
+			serverSocket.close();
+		} catch (IOException ignore) {}
+        try {
+			prepStmtFindTermDefinitions.close();
+		} catch (SQLException ignore) {}
+        try {
+			dbConnection.close();
+		} catch (SQLException ignore) {}
         return JHelp.DISCONNECT;
     }
 }
