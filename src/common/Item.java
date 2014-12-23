@@ -1,22 +1,22 @@
 /*
  * Class Item for JHelp project
  */
-package jhelp;
+package common;
 
 import java.io.Serializable;
 
 /**
  * This class presents string data from database. Objects of this type are used
- * by {@link jhelp.Data} class.<br>
+ * by {@link common.Data} class.<br>
  * The class has three private attributes. Attribute <code>id</code>
  * of integer type presents record's identificator or it's primary key. Attribute
  * <code>item</code> is {@link String} object which
  * presents any string data, for example term or definition. Attribute <code>
  * state</code> is current state of item. All legal values for <code>state</code>
- * are defined in {@link jhelp.JHelp} interface.
+ * are defined in {@link common.JHelp} interface.
  * @author <strong >Y.D.Zakovryashin, 2009</strong>
  * @version 1.01
- * @see jhelp.Data
+ * @see common.Data
  */
 public class Item implements Serializable {
 
@@ -30,13 +30,13 @@ public class Item implements Serializable {
     private int id;
     /**
      * String object presents any data. Default values is {@link
-     * jhelp.JHelp#DEFAULT_KEY} or {@link jhelp.JHelp#DEFAULT_VALUE}.
+     * common.JHelp#DEFAULT_KEY} or {@link common.JHelp#DEFAULT_VALUE}.
      * </code>
      */
     private String item;
     /**
      * Current state of item. All possible values are defined in
-     * {@link jhelp.JHelp} interface. Default values is <code>jhelp.JHelp.ORIGIN
+     * {@link common.JHelp} interface. Default values is <code>jhelp.JHelp.ORIGIN
      * </code>
      */
     private int state;
@@ -87,8 +87,8 @@ public class Item implements Serializable {
 
     /**
      * Method returns current item's value as {@link java.lang.String} object.
-     * @return current item's value. Method return {@link jhelp.JHelp#DEFAULT_VALUE}
-     * or {@link jhelp.JHelp#DEFAULT_KEY} if item not set or unknown.
+     * @return current item's value. Method return {@link common.JHelp#DEFAULT_VALUE}
+     * or {@link common.JHelp#DEFAULT_KEY} if item not set or unknown.
      * @see JHelp
      */
     public String getItem() {
@@ -98,7 +98,7 @@ public class Item implements Serializable {
     /**
      * Method retrun current state of item.
      * @return current state of item. Possible values of the state are defined in
-     * {@link jhelp.JHelp} interface. Default value is {@link JHelp#ORIGIN}.
+     * {@link common.JHelp} interface. Default value is {@link JHelp#ORIGIN}.
      * @see JHelp
      */
     public int getState() {
@@ -124,11 +124,11 @@ public class Item implements Serializable {
 
     /**
      * Method sets new value for <code>state</code> attribute. All legal values
-     * for this attribute are defined in {@link jhelp.JHelp} interface.
+     * for this attribute are defined in {@link common.JHelp} interface.
      * @param state integer number defines new value of <code>state</code>
      * attribute. All legal values for this parameter are defined in
-     * {@link jhelp.JHelp} interface.
-     * @see jhelp.JHelp
+     * {@link common.JHelp} interface.
+     * @see common.JHelp
      */
     public void setState(int state) {
         this.state = state;

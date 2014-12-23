@@ -1,8 +1,15 @@
-package jhelp;
+package client;
 
 import java.io.*;
 import java.net.*;
 
+import common.Data;
+import common.DataTransferHelper;
+import common.FileHelper;
+import common.JHelp;
+
+
+import server.Server;
 import settings.Config;
 
 import gui.JClient;
@@ -74,10 +81,9 @@ public class Client implements JHelp {
 		}    	
     }
     
-    //FIXME isConnected!!
     public boolean isConnected() {
-    	//don't use socket.isConnected() (true if once was connected)
-    	//or .isClosed() (true only if client closed connection
+    	//don't use socket.isConnected() (return true if once was connected)
+    	//or .isClosed() (true only if connection was closed from client side)
     	return (socket != null);
     }
 
@@ -102,13 +108,13 @@ public class Client implements JHelp {
     public int disconnect() {
     	try {
 			objectInStream.close();
-		} catch (IOException ignore) {}
+		} catch (Exception ignore) {}
     	try {
 			objectOutStream.close();
-    	} catch (IOException ignore) {}
+    	} catch (Exception ignore) {}
     	try {
 			socket.close();
-    	} catch (IOException ignore) {}
+    	} catch (Exception ignore) {}
     	
     	socket = null;
     	

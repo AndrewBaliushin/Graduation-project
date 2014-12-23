@@ -2,15 +2,15 @@
  * JHelp.java
  *
  */
-package jhelp;
+package common;
 
 /**
  * Interface for implementation by <code>Client, MClient, Server</code> and
  * <code>ServerDb</code> classes.
  * @author <strong >Y.D.Zakovryashin, 2009</strong>
  * @version 1.0
- * @see jhelp.Server
- * @see jhelp.ServerDb
+ * @see server.Server
+ * @see server_db.ServerDb
  */
 public interface JHelp {
 
@@ -31,19 +31,19 @@ public interface JHelp {
      */
     public static final int DISCONNECT = -2;
     /**
-     * Default value for <code>item</code> attribute of {@link jhelp.Item} object,
-     * if this object is used as <code>key</code> attribute of {@link jhelp.Data}
+     * Default value for <code>item</code> attribute of {@link common.Item} object,
+     * if this object is used as <code>key</code> attribute of {@link common.Data}
      * object.
      */
     public static final String DEFAULT_KEY = "Unknown key";
     /**
-     * Default value for <code>item</code> attribute of {@link jhelp.Item} object,
+     * Default value for <code>item</code> attribute of {@link common.Item} object,
      * if this object is used as item of <code>values</code> array of
-     * {@link jhelp.Data} object.
+     * {@link common.Data} object.
      */
     public static final String DEFAULT_VALUE = "Unknown value";
     /**
-     * Default value for <code>values</code> attribute of {@link jhelp.Data}
+     * Default value for <code>values</code> attribute of {@link common.Data}
      * object.
      */
     public static final Item[] DEFAULT_VALUES = {new Item()};
@@ -64,16 +64,16 @@ public interface JHelp {
      */
     public static final int DELETE = 16;
     /**
-     * Defines initial state for {@link jhelp.Item} object. The state can
+     * Defines initial state for {@link common.Item} object. The state can
      * replaced by {@link #INSERT}, {@link #UPDATE} or {@link #DELETE} values.
      */
     public static final int ORIGIN = 32;
     /**
-     * Defines default port for {@link jhelp.Server} object.
+     * Defines default port for {@link server.Server} object.
      */
     public static final int DEFAULT_SERVER_PORT = 12345;
     /**
-     * Defines default port for {@link jhelp.ServerDb} object.
+     * Defines default port for {@link server_db.ServerDb} object.
      */
     public static final int DEFAULT_DATABASE_PORT = 12346;
 
@@ -98,8 +98,8 @@ public interface JHelp {
 
     /**
      * Method returns result of client request to a database.
-     * @param data object of {@link jhelp.Data} type with request to database.
-     * @return object of {@link jhelp.Data} type with results of request to a
+     * @param data object of {@link common.Data} type with request to database.
+     * @return object of {@link common.Data} type with results of request to a
      * database.
      * @see Data
      * @since 1.0
@@ -111,7 +111,7 @@ public interface JHelp {
      * @return disconnect result. Method returns {@link #DISCONNECT}
      * value, if the process ends successfully. Othewise the method returns error
      * code, for example {@link #ERROR}.
-     * @see jhelp.JHelp#DISCONNECT
+     * @see common.JHelp#DISCONNECT
      * @since 1.0
      */
     int disconnect(); //anticonnect 

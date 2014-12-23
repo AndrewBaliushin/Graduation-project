@@ -1,21 +1,28 @@
 /*
  * Class ClientThread.
  */
-package jhelp;
+package server;
 
 import java.io.*;
 import java.net.*;
+
+import common.Data;
+import common.JHelp;
+
+
+import client.Client;
+
 
 import static localization.ClientLabelAndMsgs.*;
 
 /**
  * This class provides a network connection between end client of
- * {@link jhelp.Client} type and {@link jhelp.Server} object. Every object of
+ * {@link client.Client} type and {@link server.Server} object. Every object of
  * this class may work in separate thread.
  * @author <strong >Y.D.Zakovryashin, 2009</strong>
  * @version 1.0
- * @see jhelp.Client
- * @see jhelp.Server
+ * @see client.Client
+ * @see server.Server
  */
 public class ClientThread implements JHelp, Runnable {
 

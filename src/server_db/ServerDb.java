@@ -1,4 +1,4 @@
-package jhelp;
+package server_db;
 
 import java.io.*;
 
@@ -6,6 +6,13 @@ import java.net.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import common.Commandable;
+import common.Data;
+import common.Item;
+import common.JHelp;
+import common.KeyboardCommand;
+
 
 import settings.Config;
 
@@ -28,7 +35,11 @@ public class ServerDb implements JHelp, Commandable {
     
     private Connection dbConnection;
     
-    private PreparedStatement prepStmtFindTermDefinitions;    
+    private Statement simpleStmt;
+    private PreparedStatement prepStmtFindTerm;
+    private PreparedStatement prepStmtFindTermDefinitions; 
+	private PreparedStatement prepStmtInsertIntoDef;
+	private PreparedStatement prepStmtInsertIntoTerm;
     
 	public static void main(String[] args) {
 	    ServerDb sdb = new ServerDb();
@@ -51,7 +62,7 @@ public class ServerDb implements JHelp, Commandable {
         createServerSocket(port);
         loadDbDriver();
         connect(); //to db
-        prepareStatements();
+        createAndPrepareStatements();
         
         Thread cmdListner = new Thread(KeyboardCommand.getListner(this));
     	cmdListner.start();
@@ -100,10 +111,16 @@ public class ServerDb implements JHelp, Commandable {
 	    }
 	}
     
-    private void prepareStatements() {
+    private void createAndPrepareStatements() {
     	try {
+    		prepStmtFindTerm = dbConnection.prepareStatement(FIND_TERM);
+    		prepStmtInsertIntoDef = dbConnection.prepareStatement(INSERT_NEW_DEF);
+    		prepStmtInsertIntoTerm = dbConnection.prepareStatement(INSERT_NEW_TERM);
+    		
 			prepStmtFindTermDefinitions = dbConnection
 					.prepareStatement(FIND_QRY);
+			
+			simpleStmt = dbConnection.createStatement();
 		} catch (SQLException e) {
 			System.err.println(STMT_PREPARATION_ERR);
 	    	System.err.println(e.getMessage());
@@ -177,42 +194,48 @@ public class ServerDb implements JHelp, Commandable {
 
     /**
      * Method returns result of client request to a database.
-     * @param data object of {@link jhelp.Data} type with request to database.
-     * @return object of {@link jhelp.Data} type with results of request to a
+     * @param data object of {@link common.Data} type with request to database.
+     * @return object of {@link common.Data} type with results of request to a
      * database.
      * @see Data
      */
     public Data getData(Data data) {
         if(data.getOperation() == JHelp.SELECT) {
         	return findDefinitionsForTerm(data);
+        } else if (data.getOperation() == JHelp.INSERT) {
+        	return addNewEntryToDB(data);
         }
+        //TODO
         return Data.getErrorData("Unknown operation");
     }
     
-    private Data findDefinitionsForTerm(Data rqstData) {
-    	String term = rqstData.getKey().getItem();
-    	
-    	if(term.trim().isEmpty()) {
-    		return Data.getErrorData(REQUSET_FOR_EMPTY_TERM_MSG);
-    	}    	
-    	
-    	rqstData.setValues(null);
-    	
-    	List<Item> tmp = new ArrayList<>();
-    	
+    private Data findDefinitionsForTerm(Data data) {
+		String term = data.getKey().getItem();
+		
+		if(term.trim().isEmpty()) {
+			return Data.getErrorData(REQUSET_WITH_EMPTY_ARG_MSG);
+		}    	
+		
+		data.setValues(null);
+		
+		List<Item> tmp = new ArrayList<>();
+		
 		try {
 			prepStmtFindTermDefinitions.setString(1, term);
-			if(prepStmtFindTermDefinitions.execute()) {
-				ResultSet rs = prepStmtFindTermDefinitions.getResultSet();
-				while(rs.next()){
-					String definition = rs.getString(1);
-					int defId = rs.getInt(3);
-					tmp.add(new Item(defId, definition, JHelp.ORIGIN));
-				}
-				rqstData.setValues(tmp.toArray(new Item[tmp.size()]));
-				return rqstData;
+			
+			prepStmtFindTermDefinitions.execute();
+			ResultSet rs = prepStmtFindTermDefinitions.getResultSet();
+			while (rs.next()) {
+				String definition = rs.getString(1);
+				int defId = rs.getInt(3);
+				tmp.add(new Item(defId, definition, JHelp.ORIGIN));
+			}
+
+			if (tmp.isEmpty()) {
+				return Data.getErrorData(TERM_NOT_FOUND);
 			} else {
-				return Data.getErrorData("Can't find definition");
+				data.setValues(tmp.toArray(new Item[tmp.size()]));
+				return data;
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -220,14 +243,71 @@ public class ServerDb implements JHelp, Commandable {
 		}
 	}
 
-	/**
-     * Method disconnects <code>ServerDb</code> object from a database and closes
-     * {@link java.net.ServerSocket} object.
-     * @return disconnect result. Method returns {@link #DISCONNECT} value, if
-     * the process ends successfully. Othewise the method returns error code,
-     * for example {@link #ERROR}.
-     * @see jhelp.JHelp#DISCONNECT
-     * @since 1.0
+	private Data addNewEntryToDB(Data data) {
+    	String term = data.getKey().getItem();
+    	String def = data.getValue(0).getItem();
+    	
+    	term = term.trim();
+    	def = def.trim();
+    	
+    	if(term.isEmpty() || def.isEmpty()) {
+    		return Data.getErrorData(REQUSET_WITH_EMPTY_ARG_MSG);
+    	}
+    	
+    	try {
+			if(isTermExist(term)) {
+				return Data.getErrorData(REQUSET_TO_ADD_EXISTING);
+			}
+			
+			int newDefId = getDefMaxId() + 1;
+			int newTermId = getTermMaxId() + 1;
+			
+			prepStmtInsertIntoTerm.setInt(1, newTermId);
+			prepStmtInsertIntoTerm.setString(2, term);
+			
+			prepStmtInsertIntoDef.setInt(1, newDefId);
+			prepStmtInsertIntoDef.setString(2, def);
+			prepStmtInsertIntoDef.setInt(3, newTermId);	
+			
+			prepStmtInsertIntoTerm.executeUpdate();
+			prepStmtInsertIntoDef.executeUpdate();	
+			
+			return data;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return Data.getErrorData(ERROR_DURING_DB_OPERATION);
+		}
+    }
+    
+    private boolean isTermExist(String term) throws SQLException {
+    	prepStmtFindTerm.setString(1, term);
+    	prepStmtFindTerm.execute();
+    	ResultSet rs = prepStmtFindTerm.getResultSet();
+    	return rs.next(); //if rs have rows
+    }
+    
+    private int getTermMaxId() throws SQLException {
+    	return getMaxId(MAX_TERM_ID);
+    }
+    
+    private int getDefMaxId() throws SQLException {
+    	return getMaxId(MAX_DEF_ID);
+    }
+    
+    private int getMaxId(String sql) throws SQLException {
+    	simpleStmt.execute(sql);
+    	ResultSet rs = simpleStmt.getResultSet();
+    	if(rs.next()) {
+    		return rs.getInt(1); //MAX(id)
+    	} else {
+    		return 0;
+    	}
+    }
+    
+    /**
+     * Disconnects <code>ServerDb</code> object from a database and closes all 
+     * opened sockets.
      */
     public int disconnect() {
         try {

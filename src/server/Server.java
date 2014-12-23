@@ -1,19 +1,24 @@
-package jhelp;
+package server;
 
 import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import common.*;
+
+import server_db.ServerDb;
+
+
 import static settings.Config.*;
 import static localization.ServerMsgs.*;
 
 /**
- * This class sets a network connection between many {@link jhelp.Client} objects
- * and single {@link jhelp.ServerDb} object.
+ * This class sets a network connection between many {@link client.Client} objects
+ * and single {@link server_db.ServerDb} object.
  * @author Andrew Baliushin
- * @see jhelp.Client
- * @see jhelp.ClientThread
- * @see jhelp.ServerDb
+ * @see client.Client
+ * @see server.ClientThread
+ * @see server_db.ServerDb
  */
 public class Server implements JHelp, Commandable {
 	
@@ -86,7 +91,7 @@ public class Server implements JHelp, Commandable {
     }
     
     /**
-     * The method sets connection to database ({@link jhelp.ServerDb} object) and
+     * The method sets connection to database ({@link server_db.ServerDb} object) and
      * create {@link java.net.ServerSocket} object for waiting of client's
      * connection requests. This method uses default parameters for connection.
      * @return error code. The method returns {@link JHelp#OK} if streams are
@@ -98,7 +103,7 @@ public class Server implements JHelp, Commandable {
     }
 
     /**
-     * The method sets connection to database ({@link jhelp.ServerDb} object) and
+     * The method sets connection to database ({@link server_db.ServerDb} object) and
      * create {@link java.net.ServerSocket} object for waiting of client's
      * connection requests.
      * @param args specifies properties of connection.

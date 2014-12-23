@@ -8,15 +8,17 @@ import java.net.InetSocketAddress;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import common.Data;
+import common.FileHelper;
+import common.Item;
+import common.JHelp;
+
+import client.Client;
+
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
 
-import jhelp.Client;
-import jhelp.Data;
-import jhelp.FileHelper;
-import jhelp.Item;
-import jhelp.JHelp;
 
 import static localization.ClientLabelAndMsgs.*;
 import static settings.GUIconfig.*;
@@ -24,7 +26,7 @@ import static settings.Config.*;
 import static gui.JClientActionMethodNames.*;
 
 /**
- * GUI for {@link jhelp.Client}
+ * GUI for {@link client.Client}
  * @author Andrew Baliushin
  */
 @SuppressWarnings("serial")
@@ -369,8 +371,25 @@ public class JClient extends JFrame{
 	}
 	
 	void addButtonAction() {
-		JOptionPane.showMessageDialog(null, 
-				Thread.currentThread().getStackTrace()[1].getMethodName());
+		if(isDisconnectedAndShowAlertIfSo()) {
+			return;
+		}
+		
+		String term = searchField.getText();
+		String def = definitionArea.getText();
+		
+		data = new Data();
+		data.setOperation(JHelp.INSERT);
+		data.setKey(new Item(term));
+		data.setValues(new Item[]{new Item(def)});
+		
+		data = clientApp.getData(data);
+		if(data.getOperation() == JHelp.ERROR) {
+			showAlertWindow(data.getValue(0).getItem());
+		} else {
+			showAlertWindow(ADD_SUCCESS);
+			refreshDataInGUI(data);
+		}		
 	}
 	
 	void editButtonAction() {

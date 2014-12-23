@@ -1,7 +1,7 @@
 /*
  * Data.java
  */
-package jhelp;
+package common;
 
 import java.io.Serializable;
 
@@ -9,8 +9,8 @@ import java.io.Serializable;
  * This class presents data for client form: term and it's definitions. Class
  * has three private attributes. Attribute <code>operation</code> defines action
  * execute with the data in database. Attribute <code>key</code> presents a term
- * or key value as a {@link jhelp.Item} object. Attribute <code>values</code>
- * is array of {@link jhelp.Item} objects. The attribute presents a set of
+ * or key value as a {@link common.Item} object. Attribute <code>values</code>
+ * is array of {@link common.Item} objects. The attribute presents a set of
  * definitions for the <code>key</code>.
  * @author <strong >Y.D.Zakovryashin</strong>, 2009
  */
@@ -37,8 +37,8 @@ public class Data implements Serializable {
 
     /**
      * Default constructor defines all class attributes with default values.
-     * Defualt value for <code>operation</code> is {@link jhelp.JHelp#SELECT}.
-     * Default value for <code>key</code> is default {@link jhelp.Item} object.
+     * Defualt value for <code>operation</code> is {@link common.JHelp#SELECT}.
+     * Default value for <code>key</code> is default {@link common.Item} object.
      * Default value for <code>values</code> is <code>null</code>.
      */
     public Data() {
@@ -47,7 +47,7 @@ public class Data implements Serializable {
 
     /**
      * This constructor defines key value for <code>Data</code> object.
-     * @param key {@link jhelp.Item} object presents key value.
+     * @param key {@link common.Item} object presents key value.
      */
     public Data(Item key) {
         this(JHelp.SELECT, key, null);
@@ -56,9 +56,9 @@ public class Data implements Serializable {
     /**
      * Creates a new instance of <code>Data</code>
      * @param operation defines value for attribute <code>operation</code>.
-     * Legal values for this attribute are {@link jhelp.JHelp#SELECT},
-     * {@link jhelp.JHelp#INSERT}, {@link jhelp.JHelp#UPDATE} and
-     * {@link jhelp.JHelp#DELETE}.
+     * Legal values for this attribute are {@link common.JHelp#SELECT},
+     * {@link common.JHelp#INSERT}, {@link common.JHelp#UPDATE} and
+     * {@link common.JHelp#DELETE}.
      * @param key defines initial value for <code>key</code> object.
      * @param values defines initial value for <code>values</code>.
      */
@@ -114,7 +114,7 @@ public class Data implements Serializable {
      * Method sets current value of item in <code>values</code> array with
      * <code>index</code> index as <code>value</code>.
      * @param index index index in <code>values</code> array.
-     * @param value new value for {@link jhelp.Item} object in <code>values</code>
+     * @param value new value for {@link common.Item} object in <code>values</code>
      * array.
      */
     public void setValue(int index, Item value) {
@@ -125,7 +125,7 @@ public class Data implements Serializable {
 
     /**
      * Method returns all values of <code>values</code> attribute as array.
-     * @return array of {@link jhelp.Item} type.
+     * @return array of {@link common.Item} type.
      */
     public Item[] getValues() {
         return values;
@@ -133,7 +133,7 @@ public class Data implements Serializable {
 
     /**
      * Method sets array <code>values</code> as class attribute <code>values</code>.
-     * @param values array of {@link jhelp.Item} type.
+     * @param values array of {@link common.Item} type.
      */
     public void setValues(Item[] values) {
         this.values = values;

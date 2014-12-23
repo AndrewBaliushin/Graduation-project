@@ -1,4 +1,4 @@
-package jhelp;
+package common;
 
 import static localization.ClientLabelAndMsgs.*;
 
